@@ -91,6 +91,17 @@ STV 0xC000002   // will print a '*' to the terminal
 LDC 0x40
 STV 0xC000003   // will print a 64 to the terminal
 ```
+##### Comments
+
+Every lines first "word" that could not be identified as mnemonic, address, nor label, will be ignored.
+Therefore you can use something like "//" or "#" for comments in separate lines (or even after valid commands).
+
+e.g.
+```
+// this will be ignored
+ADD 0x01 #you can also do that
+STV 0x00 // and this
+```
 
 
 
