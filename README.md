@@ -1,7 +1,7 @@
 # MimaSim
 A Mima Simulator written in C
 
-## Mima Assembler
+## Mima Assembler Instructions
 | Mnemonic | Opcode | Pseudo code                          | Description                                                                               |
 |----------|--------|--------------------------------------|-------------------------------------------------------------------------------------------|
 | ADD a    | 0x0    | ACC ← ACC + mem[a]                   | Add value at address a to Accumulator                                                     |
@@ -19,3 +19,76 @@ A Mima Simulator written in C
 | NOT      | 0xf1   | ACC ← ~ACC                           | Negate value in Accumulator                                                               |
 | RAR      | 0xf2   | ACC ← (ACC << 31) | (ACC >>> 1)      | Rotate value in Accumulator right by 1 bit                                                |
 | RRN v    | 0xf3   | ACC ← (ACC << (32 -v)) | (ACC >>> v) | Rotate value in Accumulator right by v bits    
+
+## Mima Assembler Syntax
+
+##### Mnemoic + Value/Address
+
+- always use mnemonics, op codes are not supported (yet)
+- values can be written hex (e.g. 0x1A4) or decimal
+
+```
+LDC   41
+ADD   0xFF1
+STV   0xFF1
+0xFF1 0x1
+```
+
+##### Labels + Jumps
+
+- labels are case sensitive
+- it's not a good idea to jump to a self defined address, unless you know what you are doing
+
+```
+:Loop         // this is a label/jump target
+LDV   0xAFFE  // some fancy calculation
+NOT
+STV   0xAFFE
+JMP Loop      // will jump to label :Loop
+```
+
+##### Define storage
+
+- you can define the value at a specific memory address
+- the value can be a variable or an instruction
+
+```
+LDV   0xFF1
+...   
+0xFF1 0x1   //puts a one at 0xFF1
+```
+
+##### Memory Mapped I/O
+
+The mimas "general purpose" memory is defined from **0x0000 0000 - 0x0C00 0000**.
+Addresses above **0x0C00 0000** are used for memory mapped I/O.
+
+There are some defined addresses you can use to output information to the terminal:
+
+- **0x0c000001** Key Input (TODO)
+- **0x0c000002** ASCII Output
+- **0x0c000003** Integer Output
+
+e.g.
+
+```
+LDC 42
+STV 0xC000002   // will print a '*' to the terminal
+LDC 0x40
+STV 0xC000003   // will print a 64 to the terminal
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
