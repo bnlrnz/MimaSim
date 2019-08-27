@@ -35,7 +35,7 @@ mima_t mima_init()
     };
 
     // we allocate mima words aka integers
-    mima.memory_unit.memory = malloc(mima_words);
+    mima.memory_unit.memory = malloc(mima_words * sizeof(mima_word));
 
     if(!mima.memory_unit.memory)
     {
@@ -180,7 +180,7 @@ void mima_instruction_step(mima_t *mima)
 // ADD, AND, OR, XOR, EQL
 void mima_instruction_common(mima_t *mima)
 {
-    log_trace("Executing %s - %d", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing %s - %02d", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -233,7 +233,7 @@ void mima_instruction_common(mima_t *mima)
 
 void mima_instruction_LDV(mima_t *mima)
 {
-    log_trace("Executing LDV - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing LDV - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -245,7 +245,7 @@ void mima_instruction_LDV(mima_t *mima)
     case 8:
         break;
     case 9:
-        log_trace("Loading from memory address 0x%08x", mima->memory_unit.SAR);
+        log_trace("Executing LDV - %02d: Loading from memory address 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
         break;
     case 10:
@@ -263,7 +263,7 @@ void mima_instruction_LDV(mima_t *mima)
 
 void mima_instruction_STV(mima_t *mima)
 {
-    log_trace("Executing STV - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing STV - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -272,27 +272,34 @@ void mima_instruction_STV(mima_t *mima)
         break;
     case 7:
         mima->memory_unit.SAR = mima->control_unit.IR;
-        log_trace("Writing 0x%08x at memory address 0x%08x", mima->memory_unit.SIR, mima->control_unit.IR & 0x0FFFFFFF);
-
         mima_register address = mima->control_unit.IR & 0x0FFFFFFF;
 
+        log_trace("Executing STV - %02d: Writing 0x%08x to memory address 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
+
+        // writing to "internal" memory
         if (address < 0xc000000)
         {
-            mima->memory_unit.memory[mima->control_unit.IR & 0x0FFFFFFF] = mima->memory_unit.SIR;
+            mima->memory_unit.memory[address] = mima->memory_unit.SIR;
             break;
         }
         else
         {
-            // output
+            // writing to IO -> ignoring the  first 4 bits
             if (address == mima_ascii_output)
             {
                 printf("%c\n", mima->memory_unit.SIR & 0x0FFFFFFF);
+                break;
             }
 
             if (address == mima_integer_output)
             {
                 printf("%d\n", mima->memory_unit.SIR & 0x0FFFFFFF);
+                break;
             }
+
+            log_warn("Writing into undefined I/O space. Nothing will happen!");
+
+            break;
         }
 
     case 8:
@@ -313,7 +320,7 @@ void mima_instruction_STV(mima_t *mima)
 
 void mima_instruction_HLT(mima_t *mima)
 {
-    log_trace("Executing HLT - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing HLT - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -330,7 +337,7 @@ void mima_instruction_HLT(mima_t *mima)
     case 11:
         break;
     case 12:
-        log_trace("Halting mima...");
+        log_trace("Halting mima");
         mima->control_unit.RUN = mima_false;
         break;
     default:
@@ -341,7 +348,7 @@ void mima_instruction_HLT(mima_t *mima)
 
 void mima_instruction_LDC(mima_t *mima)
 {
-    log_trace("Executing LDC - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing LDC - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -368,7 +375,7 @@ void mima_instruction_LDC(mima_t *mima)
 
 void mima_instruction_JMP(mima_t *mima)
 {
-    log_trace("Executing JMP - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing JMP - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -395,13 +402,16 @@ void mima_instruction_JMP(mima_t *mima)
 
 void mima_instruction_JMN(mima_t *mima)
 {
-    log_trace("Executing JMN - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing JMN - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
-        if(mima->processing_unit.ACC < 0)
+        if((int32_t)mima->processing_unit.ACC < 0)
+        {
+            log_trace("Executing JMN - %d ACC = %d - Jumping to: 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC, mima->control_unit.IR & 0x0FFFFFFF);
             mima->control_unit.IAR = mima->control_unit.IR & 0x0FFFFFFF;
+        }
         break;
     case 7:
         break;
@@ -423,7 +433,7 @@ void mima_instruction_JMN(mima_t *mima)
 
 void mima_instruction_NOT(mima_t *mima)
 {
-    log_trace("Executing NOT - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing NOT - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -454,7 +464,7 @@ void mima_instruction_NOT(mima_t *mima)
 
 void mima_instruction_RAR(mima_t *mima)
 {
-    log_trace("Executing RAR - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing RAR - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
@@ -491,7 +501,7 @@ void mima_instruction_RAR(mima_t *mima)
 
 void mima_instruction_RRN(mima_t *mima)
 {
-    log_trace("Executing RRN - %d...", mima->processing_unit.MICRO_CYCLE);
+    log_trace("Executing RRN - %02d", mima->processing_unit.MICRO_CYCLE);
 
     switch(mima->processing_unit.MICRO_CYCLE)
     {
