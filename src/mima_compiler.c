@@ -218,7 +218,6 @@ void mima_push_label(const char *label_name, uint32_t address)
         log_error("Label size is limited by 32 chars...\n");
     }
 
-
     strncpy(mima_labels[labels_count].label_name,label_name,31);
     mima_labels[labels_count].address = address;
 
@@ -235,7 +234,7 @@ uint32_t mima_address_for_label(const char *label_name)
         }
     }
 
-    log_error("Could not found your label: %s\n", label_name);
+    log_error("Could not find your label: %s\n", label_name);
     return -1;
 }
 

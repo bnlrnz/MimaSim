@@ -23,11 +23,9 @@ int main(int argc, char** argv){
 	mima_run(&mima);
 
 	mima_print_state(&mima);
-
 	mima_print_memory_at(&mima, 0);
 
-	printf("Defined memory:\n");
-
+	printf("\nDefined memory:\n");
 	mima_print_memory_at(&mima, 0xFF0);
 
 	mima_delete(&mima);
