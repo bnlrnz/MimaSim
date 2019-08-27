@@ -56,6 +56,7 @@ mima_t mima_init()
 
 void mima_run(mima_t *mima)
 {
+    log_trace("\n================================\nStarting Mima...\n");
     while(mima->control_unit.RUN == mima_true)
     {
         mima_instruction_step(mima);
@@ -63,7 +64,8 @@ void mima_run(mima_t *mima)
     }
 }
 
-mima_bool mima_compile(mima_t*mima, const char* file_name){
+mima_bool mima_compile(mima_t *mima, const char *file_name)
+{
     return mima_compile_file(mima, file_name);
 }
 
@@ -165,7 +167,7 @@ void mima_instruction_step(mima_t *mima)
             log_warn("Invalid instruction - nr.%d - :(\n", mima->current_instruction.op_code);
             assert(0);
         }
-    };
+    }
     }
 
     mima->processing_unit.MICRO_CYCLE++;

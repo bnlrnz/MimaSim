@@ -207,6 +207,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         log_error("Setting mima RUN flag to false.");
         log_error("Nothing will be executed...");
         mima->control_unit.RUN = mima_false;
+    }else{
+        log_info("Compiled without errors.");
     }
 
     return mima_true;
