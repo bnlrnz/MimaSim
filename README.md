@@ -50,6 +50,7 @@ STV   0xFF1
 
 - labels are case sensitive
 - it's not a good idea to jump to a self defined address, unless you know what you are doing
+- for now, labels MUST be declared before a jump
 
 ```
 :Loop         // this is a label/jump target
