@@ -113,6 +113,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
     char line[256];
     size_t line_number = 0;
     size_t memory_address = 0;
+    size_t error = 0;
     while(fgets(line, sizeof(line), file))
     {
         line_number++;
@@ -124,7 +125,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         if(string1 == NULL)
         {
-            log_warn("Line %zu: Found nothing useful in \n\t\t %s\n", line_number, line);
+            log_warn("Line %zu: Found nothing useful in \n\t\t %s", line_number, line);
+            error++;
             continue;
         }
 
@@ -149,15 +151,16 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
                 if (!mima_string_to_number(string2, &value))
                 {
                     // could not parse number string -> is there a label?
-                    value = mima_address_for_label(&string2[0]);
+                    value = mima_address_for_label(&string2[0], line_number);
                 }
             }
 
             mima_register instruction = 0;
 
-            if (!mima_assemble_instruction(&instruction, op_code, value))
+            if (!mima_assemble_instruction(&instruction, op_code, value, line_number))
             {
-                log_warn("Line %zu: Could not assemble instruction: %s\n", line_number, line);
+                log_error("Line %zu: Could not assemble instruction: %s", line_number, line);
+                error++;
                 continue;
             }
 
@@ -170,7 +173,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         if (string1[0] == ':')
         {
             log_trace("Line %zu: Label %s for address 0x%08x", line_number, &string1[1], memory_address);
-            mima_push_label(&string1[1], memory_address);
+            mima_push_label(&string1[1], memory_address, line_number);
             continue;
         }
 
@@ -182,7 +185,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
             string2 = strtok(NULL, " ");
 
             if(!mima_string_to_number(string2, &value)){
-                log_warn("Found address at line %d - value should follow, but did not :(\n", line_number);
+                log_error("Found address at line %d - value should follow, but did not.", line_number);
+                error++;
             }
 
             log_trace("Line %zu: Define mem[0x%08x] = 0x%08x", line_number, op_code, value);
@@ -194,13 +198,21 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         // TODO: Breakpoints
 
-        log_warn("Line %zu: Ignoring - %s :(", line_number, line);
+        log_warn("Line %zu: Ignoring - %s", line_number, line);
+    }
+
+    if (error > 0)
+    {
+        log_error("Found %d error(s) or warning(s) while compiling.", error);
+        log_error("Setting mima RUN flag to false.");
+        log_error("Nothing will be executed...");
+        mima->control_unit.RUN = mima_false;
     }
 
     return mima_true;
 }
 
-void mima_push_label(const char *label_name, uint32_t address)
+void mima_push_label(const char *label_name, uint32_t address, size_t line)
 {
     if(labels_count + 1 > labels_capacity)
     {
@@ -209,13 +221,13 @@ void mima_push_label(const char *label_name, uint32_t address)
 
         if (!mima_labels)
         {
-            log_error("Could not realloc memory for labels :(\n");
+            log_error("Line %zu: Could not realloc memory for labels.", line);
         }
     }
 
     if(strlen(label_name) > 31)
     {
-        log_error("Label size is limited by 32 chars...\n");
+        log_error("Line %zu: Label size is limited by 32 chars.", line);
     }
 
     strncpy(mima_labels[labels_count].label_name,label_name,31);
@@ -224,7 +236,7 @@ void mima_push_label(const char *label_name, uint32_t address)
     labels_count++;
 }
 
-uint32_t mima_address_for_label(const char *label_name)
+uint32_t mima_address_for_label(const char *label_name, size_t line)
 {
     for (int i = 0; i < labels_count; ++i)
     {
@@ -234,15 +246,15 @@ uint32_t mima_address_for_label(const char *label_name)
         }
     }
 
-    log_error("Could not find your label: %s\n", label_name);
+    log_error("Line %zu: Could not find your label: %s", line, label_name);
     return -1;
 }
 
-mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code, uint32_t value)
+mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code, uint32_t value, size_t line)
 {
     if(op_code < 0 || op_code > 0xFF)
     {
-        log_warn("Invalid op code %d\n", op_code);
+        log_error("Line %zu: Invalid op code %d", line, op_code);
         return mima_false;
     }
 
@@ -255,7 +267,7 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
 
     if(value < 0 || value > 0x0FFFFFFF)
     {
-        log_warn("Invalid value %d\n", op_code);
+        log_error("Line %zu: Invalid value %d", line, op_code);
         return mima_false;
     }
 
