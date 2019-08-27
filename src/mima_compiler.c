@@ -191,6 +191,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
             continue;
         }
 
+        // TODO: Breakpoints
+
         log_warn("Something went wrong parsing line %d :(", line_number);
     }
 
