@@ -1,6 +1,20 @@
 # MimaSim
 A Mima Simulator written in C
 
+## Build
+
+```bash
+$make
+```
+or
+
+```bash
+$mkdir build
+$cd build
+$cmake ../
+$make
+```
+
 ## Mima Assembler Instructions
 | Mnemonic | Opcode | Pseudo code                          | Description                                                                               |
 |----------|--------|--------------------------------------|-------------------------------------------------------------------------------------------|
