@@ -35,59 +35,59 @@ mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
     *op_code = -1;
 
     // thank god, this was done in sublime!
-    if (strcmp(op_code_string, "AND") == 0 || strcmp(op_code_string, "and") == 0)
+    if (strncmp(op_code_string, "AND", 3) == 0 || strncmp(op_code_string, "and", 3) == 0)
     {
         *op_code = AND;
     }
-    else if (strcmp(op_code_string, "ADD") == 0 || strcmp(op_code_string, "add") == 0)
+    else if (strncmp(op_code_string, "ADD", 3) == 0 || strncmp(op_code_string, "add", 3) == 0)
     {
         *op_code = ADD;
     }
-    else if (strcmp(op_code_string, "OR ") == 0 || strcmp(op_code_string, "or ") == 0)
+    else if (strncmp(op_code_string, "OR", 2) == 0 || strncmp(op_code_string, "or", 2) == 0)
     {
         *op_code = OR ;
     }
-    else if (strcmp(op_code_string, "XOR") == 0 || strcmp(op_code_string, "xor") == 0)
+    else if (strncmp(op_code_string, "XOR", 3) == 0 || strncmp(op_code_string, "xor", 3) == 0)
     {
         *op_code = XOR;
     }
-    else if (strcmp(op_code_string, "LDV") == 0 || strcmp(op_code_string, "ldv") == 0)
+    else if (strncmp(op_code_string, "LDV", 3) == 0 || strncmp(op_code_string, "ldv", 3) == 0)
     {
         *op_code = LDV;
     }
-    else if (strcmp(op_code_string, "STV") == 0 || strcmp(op_code_string, "stv") == 0)
+    else if (strncmp(op_code_string, "STV", 3) == 0 || strncmp(op_code_string, "stv", 3) == 0)
     {
         *op_code = STV;
     }
-    else if (strcmp(op_code_string, "LDC") == 0 || strcmp(op_code_string, "ldc") == 0)
+    else if (strncmp(op_code_string, "LDC", 3) == 0 || strncmp(op_code_string, "ldc", 3) == 0)
     {
         *op_code = LDC;
     }
-    else if (strcmp(op_code_string, "JMP") == 0 || strcmp(op_code_string, "jmp") == 0)
+    else if (strncmp(op_code_string, "JMP", 3) == 0 || strncmp(op_code_string, "jmp", 3) == 0)
     {
         *op_code = JMP;
     }
-    else if (strcmp(op_code_string, "JMN") == 0 || strcmp(op_code_string, "jmn") == 0)
+    else if (strncmp(op_code_string, "JMN", 3) == 0 || strncmp(op_code_string, "jmn", 3) == 0)
     {
         *op_code = JMN;
     }
-    else if (strcmp(op_code_string, "EQL") == 0 || strcmp(op_code_string, "eql") == 0)
+    else if (strncmp(op_code_string, "EQL", 3) == 0 || strncmp(op_code_string, "eql", 3) == 0)
     {
         *op_code = EQL;
     }
-    else if (strcmp(op_code_string, "HLT") == 0 || strcmp(op_code_string, "hlt") == 0)
+    else if (strncmp(op_code_string, "HLT", 3) == 0 || strncmp(op_code_string, "hlt", 3) == 0)
     {
         *op_code = HLT;
     }
-    else if (strcmp(op_code_string, "NOT") == 0 || strcmp(op_code_string, "not") == 0)
+    else if (strncmp(op_code_string, "NOT", 3) == 0 || strncmp(op_code_string, "not", 3) == 0)
     {
         *op_code = NOT;
     }
-    else if (strcmp(op_code_string, "RAR") == 0 || strcmp(op_code_string, "rar") == 0)
+    else if (strncmp(op_code_string, "RAR", 3) == 0 || strncmp(op_code_string, "rar", 3) == 0)
     {
         *op_code = RAR;
     }
-    else if (strcmp(op_code_string, "RRN") == 0 || strcmp(op_code_string, "rrn") == 0)
+    else if (strncmp(op_code_string, "RRN", 3) == 0 || strncmp(op_code_string, "rrn", 3) == 0)
     {
         *op_code = RRN;
     }
@@ -125,7 +125,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         if(string1 == NULL)
         {
-            log_warn("Line %zu: Found nothing useful in \n\t\t %s", line_number, line);
+            log_warn("Line %zu: Found nothing useful in \"%s\"", line_number, line);
             error++;
             continue;
         }
@@ -182,7 +182,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         {
             uint32_t value = 0;
 
-            string2 = strtok(NULL, " ");
+            string2 = strtok(NULL, " \r\n");
 
             if(!mima_string_to_number(string2, &value)){
                 log_error("Found address at line %d - value should follow, but did not.", line_number);
@@ -196,9 +196,15 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
             continue;
         }
 
+        // line comment
+        if(strncmp(string1, "//", 2) == 0 || string1[0] == '#'){
+            log_trace("Line %zu: Ignoring comment \"%s\"...", line_number, string1);
+            continue;
+        }
+
         // TODO: Breakpoints
 
-        log_warn("Line %zu: Ignoring - %s", line_number, line);
+        log_warn("Line %zu: Ignoring - \"%s\"", line_number, line);
     }
 
     if (error > 0)
