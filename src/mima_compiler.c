@@ -19,7 +19,7 @@ mima_bool mima_string_to_number(const char *string, uint32_t *number)
         *number = strtol(string, NULL, 0);
         return mima_true;
     }
-    else if (string[0] >= '0' || string[0] <= '9')
+    else if (string[0] >= '0' && string[0] <= '9')
     {
         // parse decimal integer
         *number = strtol(string, NULL, 10);
@@ -111,19 +111,20 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
     }
 
     char line[256];
-    size_t line_number = 1;
+    size_t line_number = 0;
+    size_t memory_address = 0;
     while(fgets(line, sizeof(line), file))
     {
+        line_number++;
 
         char *string1 = NULL;
         char *string2 = NULL;
-        char *string3 = NULL;
 
         string1 = strtok(line, " \r\n");
 
         if(string1 == NULL)
         {
-            log_warn("Nothing useful found at line %zu:\n\t\t %s\n", line_number, line);
+            log_warn("Line %zu: Found nothing useful in \n\t\t %s\n", line_number, line);
             continue;
         }
 
@@ -138,7 +139,6 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         uint32_t op_code;
         if (mima_string_to_op_code(string1, &op_code))
         {
-
             uint32_t value = 0;
 
             // parse value if available
@@ -149,7 +149,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
                 if (!mima_string_to_number(string2, &value))
                 {
                     // could not parse number string -> is there a label?
-                    value = mima_address_for_label(&string2[1]);
+                    value = mima_address_for_label(&string2[0]);
                 }
             }
 
@@ -157,20 +157,20 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
             if (!mima_assemble_instruction(&instruction, op_code, value))
             {
-                log_warn("Could not assemble instruction in line %zu: %s\n", line_number++, line);
+                log_warn("Line %zu: Could not assemble instruction: %s\n", line_number, line);
                 continue;
             }
 
-            mima->memory_unit.memory[line_number - 1] = instruction;
-
-            line_number++;
+            log_trace("Line %zu: %s 0x%08x -> stored at mem[0x%08x]", line_number, mima_get_instruction_name(op_code), value, memory_address);
+            mima->memory_unit.memory[memory_address++] = instruction;
             continue;
         }
 
         // string1 is a label -> safe for later and remeber line number aka address
         if (string1[0] == ':')
         {
-            mima_push_label(&string1[1], line_number + 1);
+            log_trace("Line %zu: Label %s for address 0x%08x", line_number, &string1[1], memory_address);
+            mima_push_label(&string1[1], memory_address);
             continue;
         }
 
@@ -185,15 +185,16 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
                 log_warn("Found address at line %d - value should follow, but did not :(\n", line_number);
             }
 
+            log_trace("Line %zu: Define mem[0x%08x] = 0x%08x", line_number, op_code, value);
+
             // op_code holds the address in this case
             mima->memory_unit.memory[op_code] = value;
-            line_number++;
             continue;
         }
 
         // TODO: Breakpoints
 
-        log_warn("Something went wrong parsing line %d :(", line_number);
+        log_warn("Line %zu: Ignoring - %s :(", line_number, line);
     }
 
     return mima_true;
