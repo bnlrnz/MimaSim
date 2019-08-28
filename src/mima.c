@@ -151,9 +151,9 @@ int mima_prompt_execute_command(mima_t *mima, char *input)
     case 'r':
     {
 
-        if (mima->current_instruction.op_code == HLT)
+        if (mima->current_instruction.op_code == HLT && mima->control_unit.IAR != 0)
         {
-            printf("Last instruction was HLT. Are you shure you want to run the mima? -> y|N\n\nThis could result in a lot of ADD instructions if you just executed a mima program\nand the IAR points to the end of your defined memory.\nYou can set the IAR (e.g. to zero) with the 'i' command.\n\n");
+            printf("Last instruction was HLT and IAR != 0. Are you shure you want to run the mima? -> y|N\n\nThis could result in a lot of ADD instructions if you just executed a mima program\nand the IAR points to the end of your defined memory.\nYou can set the IAR (e.g. to zero) with the 'i' command.\n\nBeware: the first run of your program could have modified the mima state or memory.\nThis could result in an endless loop.\n");
             char res = getchar();
             if (res != 'y')
             {
@@ -193,7 +193,7 @@ int mima_prompt(mima_t *mima)
     char command[32];
     char *input;
 
-    printf("mima_shell> ");
+    printf("\e[1;32mmima_shell>\e[m ");
     input = fgets(command, 31, stdin);
 
     if(!input)
