@@ -5,6 +5,8 @@
 #include "mima_compiler.h"
 #include "log.h"
 
+const char* delimiter = " \n\r";
+
 uint32_t labels_count = 0;
 uint32_t labels_capacity = INITIAL_LABEL_CAPACITY;
 
@@ -146,7 +148,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
             // parse value if available
             if (op_code != NOT && op_code != HLT && op_code != RAR)
             {
-                string2 = strtok(NULL, " \r\n");
+                string2 = strtok(NULL, delimiter);
 
                 if (!mima_string_to_number(string2, &value))
                 {
@@ -164,7 +166,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
                 continue;
             }
 
-            log_trace("Line %03zu: %s 0x%08x -> stored at mem[0x%08x]", line_number, mima_get_instruction_name(op_code), value, memory_address);
+            log_trace("Line %03zu: %3s 0x%08x -> stored at mem[0x%08x]", line_number, mima_get_instruction_name(op_code), value, memory_address);
             mima->memory_unit.memory[memory_address++] = instruction;
             continue;
         }
@@ -172,7 +174,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         // string1 is a label -> safe for later and remeber line number aka address
         if (string1[0] == ':')
         {
-            log_trace("Line %03zu: %s for address 0x%08x", line_number, &string1[1], memory_address);
+            log_trace("Line %03zu: %3s for address 0x%08x", line_number, &string1[1], memory_address);
             mima_push_label(&string1[1], memory_address, line_number);
             continue;
         }
@@ -182,7 +184,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         {
             uint32_t value = 0;
 
-            string2 = strtok(NULL, " \r\n");
+            string2 = strtok(NULL, delimiter);
 
             if(!mima_string_to_number(string2, &value))
             {

@@ -9,7 +9,6 @@
 
 mima_t mima_init()
 {
-
     mima_t mima =
     {
         .control_unit = {
@@ -34,7 +33,7 @@ mima_t mima_init()
         }
     };
 
-    // we allocate mima words aka integers
+    // we allocate mima words aka 32 Bit integers
     mima.memory_unit.memory = malloc(mima_words * sizeof(mima_word));
 
     if(!mima.memory_unit.memory)
@@ -56,7 +55,7 @@ mima_t mima_init()
 
 void mima_run(mima_t *mima)
 {
-    log_trace("\n================================\nStarting Mima...\n");
+    log_trace("\n\n==========================\nStarting Mima...\n==========================\n");
     while(mima->control_unit.RUN == mima_true)
     {
         mima_instruction_step(mima);
@@ -108,22 +107,30 @@ void mima_instruction_step(mima_t *mima)
     {
     case 1:
         mima->memory_unit.SAR   = mima->control_unit.IAR;
+        log_trace("Fetch - %02d: IAR -> SAR \t\t\t 0x%08x -> SAR \t\t I/O Read disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IAR);
         mima->processing_unit.X = mima->control_unit.IAR;
+        log_trace("Fetch - %02d: IAR -> X \t\t\t 0x%08x -> X \t", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IAR);
         break;
     case 2:
         mima->processing_unit.Y = mima->processing_unit.ONE;
+        log_trace("Fetch - %02d: ONE -> Y", mima->processing_unit.MICRO_CYCLE);
         mima->processing_unit.ALU = ADD;
+        log_trace("Fetch - %02d: Set ALU to ADD \t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
         break;
     case 3:
         mima->processing_unit.Z = mima->processing_unit.X + mima->processing_unit.Y;
+        log_trace("Fetch - %02d: X + Y -> Z \t\t\t 0x%08x + 0x%08x -> Z \t I/O waiting...", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
         break;
     case 4:
         mima->control_unit.IAR = mima->processing_unit.Z;
+        log_trace("Fetch - %02d: Z -> IAR \t\t\t 0x%08x -> IAR", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         mima->current_instruction = mima_instruction_decode(mima);
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        log_trace("Fetch - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 5:
         mima->control_unit.IR = mima->memory_unit.SIR;
+        log_trace("Fetch - %02d: SIR -> IR \t\t\t 0x%08x -> IR", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
         break;
     default:
     {
@@ -180,23 +187,28 @@ void mima_instruction_step(mima_t *mima)
 // ADD, AND, OR, XOR, EQL
 void mima_instruction_common(mima_t *mima)
 {
-    log_trace("Executing %s - %02d", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        log_trace("%5s - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Read disposed", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        log_trace("%5s - %02d: ACC -> X \t\t\t 0x%08x -> X \t\t I/O waiting...", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
+        log_trace("%5s - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        log_trace("%5s - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 10:
         mima->processing_unit.Y = mima->memory_unit.SIR;
+        log_trace("%5s - %02d: SIR -> Y \t\t\t 0x%08x -> Y", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
+        mima->processing_unit.ALU = mima->current_instruction.op_code;
+        log_trace("%5s - %02d: Set ALU to %s", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima_get_instruction_name(mima->current_instruction.op_code));
         break;
     case 11:
     {
@@ -204,18 +216,23 @@ void mima_instruction_common(mima_t *mima)
         {
         case AND:
             mima->processing_unit.Z = mima->processing_unit.X & mima->processing_unit.Y;
+            log_trace("%5s - %02d: X & Y -> Z \t\t\t 0x%08x & 0x%08x -> Z", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
             break;
         case OR:
             mima->processing_unit.Z = mima->processing_unit.X | mima->processing_unit.Y;
+            log_trace("%5s - %02d: X | Y -> Z \t\t\t 0x%08x | 0x%08x -> Z", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
             break;
         case XOR:
             mima->processing_unit.Z = mima->processing_unit.X ^ mima->processing_unit.Y;
+            log_trace("%5s - %02d: X ^ Y -> Z \t\t\t 0x%08x ^ 0x%08x -> Z", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
             break;
         case ADD:
             mima->processing_unit.Z = mima->processing_unit.X + mima->processing_unit.Y;
+            log_trace("%5s - %02d: X + Y -> Z \t\t\t 0x%08x + 0x%08x -> Z", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
             break;
         case EQL:
             mima->processing_unit.Z = mima->processing_unit.X == mima->processing_unit.Y ? -1 : 0;
+            log_trace("%5s - %02d: X == Y ? -1 : 0 -> Z \t 0x%08x == 0x%08x ? -1 : 0 -> Z", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
             break;
         default:
             break;
@@ -224,6 +241,7 @@ void mima_instruction_common(mima_t *mima)
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        log_trace("%5s - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -233,27 +251,31 @@ void mima_instruction_common(mima_t *mima)
 
 void mima_instruction_LDV(mima_t *mima)
 {
-    log_trace("Executing LDV - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        log_trace("  LDV - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Read disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
+        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...");
         break;
     case 8:
+        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...");
         break;
     case 9:
-        log_trace("Executing LDV - %02d: Loading from memory address 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        log_trace("  LDV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 10:
         mima->processing_unit.ACC = mima->memory_unit.SIR;
+        log_trace("  LDV - %02d: SIR -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
         break;
     case 11:
+        log_trace("  LDV - %02d: empty");
         break;
     case 12:
+        log_trace("  LDV - %02d: empty");
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -263,18 +285,27 @@ void mima_instruction_LDV(mima_t *mima)
 
 void mima_instruction_STV(mima_t *mima)
 {
-    log_trace("Executing STV - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         mima->memory_unit.SIR = mima->processing_unit.ACC;
+        log_trace("  STV - %02d: ACC -> SIR \t\t\t 0x%08x -> SIR", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 7:
-        mima->memory_unit.SAR = mima->control_unit.IR;
+        mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        log_trace("  STV - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Write disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
+        break;
+    case 8:
+        log_trace("  STV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
+        break;
+    case 9:
+        log_trace("  STV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
+        break;
+    case 10:
+    {
         mima_register address = mima->control_unit.IR & 0x0FFFFFFF;
 
-        log_trace("Executing STV - %02d: Writing 0x%08x to memory address 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
+        log_trace("  STV - %02d: SIR -> mem[IR & 0x0FFFFFFF] \t 0x%08x -> mem[0x%08x] \t I/O Write done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
 
         // writing to "internal" memory
         if (address < 0xc000000)
@@ -301,16 +332,13 @@ void mima_instruction_STV(mima_t *mima)
 
             break;
         }
-
-    case 8:
-        break;
-    case 9:
-        break;
-    case 10:
-        break;
+    }
+    break;
     case 11:
+        log_trace("  STV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 12:
+        log_trace("  STV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -320,52 +348,35 @@ void mima_instruction_STV(mima_t *mima)
 
 void mima_instruction_HLT(mima_t *mima)
 {
-    log_trace("Executing HLT - %02d", mima->processing_unit.MICRO_CYCLE);
-
-    switch(mima->processing_unit.MICRO_CYCLE)
-    {
-    case 6:
-        break;
-    case 7:
-        break;
-    case 8:
-        break;
-    case 9:
-        break;
-    case 10:
-        break;
-    case 11:
-        break;
-    case 12:
-        log_trace("Halting mima");
-        mima->control_unit.RUN = mima_false;
-        break;
-    default:
-        log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
-        assert(0);
-    }
+    log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
+    mima->control_unit.RUN = mima_false;
 }
 
 void mima_instruction_LDC(mima_t *mima)
 {
-    log_trace("Executing LDC - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         mima->processing_unit.ACC = mima->control_unit.IR & 0x0FFFFFFF;
+        log_trace("  LDC - %02d: IR & 0x0FFFFFFF -> ACC \t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
+        log_trace("  LDC - %02d: empty");
         break;
     case 8:
+        log_trace("  LDC - %02d: empty");
         break;
     case 9:
+        log_trace("  LDC - %02d: empty");
         break;
     case 10:
+        log_trace("  LDC - %02d: empty");
         break;
     case 11:
+        log_trace("  LDC - %02d: empty");
         break;
     case 12:
+        log_trace("  LDC - %02d: empty");
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -375,24 +386,29 @@ void mima_instruction_LDC(mima_t *mima)
 
 void mima_instruction_JMP(mima_t *mima)
 {
-    log_trace("Executing JMP - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         mima->control_unit.IAR = mima->control_unit.IR & 0x0FFFFFFF;
+        log_trace("  JMP - %02d: IR & 0x0FFFFFFF -> JMP \t", mima->processing_unit.MICRO_CYCLE);
         break;
     case 7:
+        log_trace("  JMP - %02d: empty");
         break;
     case 8:
+        log_trace("  JMP - %02d: empty");
         break;
     case 9:
+        log_trace("  JMP - %02d: empty");
         break;
     case 10:
+        log_trace("  JMP - %02d: empty");
         break;
     case 11:
+        log_trace("  JMP - %02d: empty");
         break;
     case 12:
+        log_trace("  JMP - %02d: empty");
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -402,28 +418,36 @@ void mima_instruction_JMP(mima_t *mima)
 
 void mima_instruction_JMN(mima_t *mima)
 {
-    log_trace("Executing JMN - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
         if((int32_t)mima->processing_unit.ACC < 0)
         {
-            log_trace("Executing JMN - %d ACC = %d - Jumping to: 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC, mima->control_unit.IR & 0x0FFFFFFF);
             mima->control_unit.IAR = mima->control_unit.IR & 0x0FFFFFFF;
+            log_trace("  JMN - %02d: ACC = 0x%08x - Jumping to: 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC, mima->control_unit.IR & 0x0FFFFFFF);
+        }
+        else
+        {
+            log_trace("  JMN - %02d: ACC = 0x%08x - No jump taken", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC, mima->control_unit.IR & 0x0FFFFFFF);
         }
         break;
     case 7:
+        log_trace("  JMN - %02d: empty");
         break;
     case 8:
+        log_trace("  JMN - %02d: empty");
         break;
     case 9:
+        log_trace("  JMN - %02d: empty");
         break;
     case 10:
+        log_trace("  JMN - %02d: empty");
         break;
     case 11:
+        log_trace("  JMN - %02d: empty");
         break;
     case 12:
+        log_trace("  JMN - %02d: empty");
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -433,28 +457,32 @@ void mima_instruction_JMN(mima_t *mima)
 
 void mima_instruction_NOT(mima_t *mima)
 {
-    log_trace("Executing NOT - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
+        log_trace("  NOT - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        log_trace("  NOT - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
+        log_trace("  NOT - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
+        log_trace("  NOT - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 10:
         mima->processing_unit.ALU = NOT;
-        // SET ACC -> NOT
+        log_trace("  NOT - %02d: Set ALU to NOT", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
         mima->processing_unit.Z = ~mima->processing_unit.X;
+        log_trace("  NOT - %02d: ~X -> Z \t\t\t ~0x%08x -> Z", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X);
         break;
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        log_trace("  NOT - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -464,34 +492,39 @@ void mima_instruction_NOT(mima_t *mima)
 
 void mima_instruction_RAR(mima_t *mima)
 {
-    log_trace("Executing RAR - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
+        log_trace("  RAR - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        log_trace("  RAR - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
+        log_trace("  RAR - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
+        log_trace("  RAR - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 10:
         mima->processing_unit.Y = mima->processing_unit.ONE;
+        log_trace("  RAR - %02d: ONE -> Y", mima->processing_unit.MICRO_CYCLE);
         mima->processing_unit.ALU = RAR;
-        // SET ACC -> RAR
+        log_trace("  RAR - %02d: Set ALU to RAR", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
     {
-        int32_t shifted = mima->processing_unit.Z >> mima->processing_unit.Y;
-        int32_t rotated = mima->processing_unit.Z << (32 - mima->processing_unit.Y);
+        int32_t shifted = mima->processing_unit.X >> mima->processing_unit.Y;
+        int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
+        log_trace("  RAR - %02d: (X >>> 1) | (X << 31) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        log_trace("  RAR - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -501,34 +534,39 @@ void mima_instruction_RAR(mima_t *mima)
 
 void mima_instruction_RRN(mima_t *mima)
 {
-    log_trace("Executing RRN - %02d", mima->processing_unit.MICRO_CYCLE);
-
     switch(mima->processing_unit.MICRO_CYCLE)
     {
     case 6:
+        log_trace("  RRN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        log_trace("  RRN - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
+        log_trace("  RRN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
+        log_trace("  RRN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 10:
         mima->processing_unit.Y = mima->control_unit.IR & 0x00FFFFFF;
+        log_trace("  RRN - %02d: IR & 0x00FFFFFF -> Y \t 0x%08x -> Y", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x00FFFFFF);
         mima->processing_unit.ALU = RRN;
-        // SET ACC -> RRN
+        log_trace("  RRN - %02d: Set ALU to RRN", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
     {
-        int32_t shifted = mima->processing_unit.Z >> mima->processing_unit.Y;
-        int32_t rotated = mima->processing_unit.Z << (32 - mima->processing_unit.Y);
+        int32_t shifted = mima->processing_unit.X >> mima->processing_unit.Y;
+        int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
+        log_trace("  RRN - %02d: (X >>> Y) | (X << (32-Y)) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        log_trace("  RRN - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
