@@ -55,14 +55,28 @@ mima_t mima_init()
 
 void mima_prompt_print_help()
 {
-    printf("s [#]           runs # micro instructions \n");
-    printf("S [#]           runs # instructions \n");
-    printf("S               runs/ends current instruction\n");
-    printf("m addr [#]      prints # lines of memory at address\n");
-    printf("r               runs program till end or breakpoint\n");
-    printf("p               prints mima state\n");
-    printf("L [LOG_LEVEL]   prints or sets the log level\n");
-    printf("q               quits mima\n");
+    printf("\n=====================\n mima_shell commands \n=====================\n");
+    printf(" s [#].........runs # micro instructions \n");
+    printf(" S [#].........runs # instructions \n");
+    printf(" S.............runs/ends current instruction\n");
+    printf(" m addr [#]....prints # lines of memory at address\n");
+    printf(" i addr........sets the IAR to address\n");
+    printf(" r.............runs program till end or breakpoint\n");
+    printf(" p.............prints mima state\n");
+    printf(" L [LOG_LEVEL].prints or sets the log level\n");
+    printf(" q.............quits mima\n");
+    printf("=====================\n");
+}
+
+void mima_prompt_set_IAR(mima_t *mima, char *arg)
+{
+    char *endptr;
+    int address = strtol(arg, &endptr, 0);
+
+    if(endptr == arg)
+        address = 0;
+
+    mima->control_unit.IAR = address;
 }
 
 void mima_prompt_print_memory(mima_t *mima, char *arg)
@@ -131,8 +145,24 @@ int mima_prompt_execute_command(mima_t *mima, char *input)
     case 'm':
         mima_prompt_print_memory(mima, input + 1);
         break;
+    case 'i':
+        mima_prompt_set_IAR(mima, input + 1);
+        break;
     case 'r':
     {
+
+        if (mima->current_instruction.op_code == HLT)
+        {
+            printf("Last instruction was HLT. Are you shure you want to run the mima? -> y|N\n\nThis could result in a lot of ADD instructions if you just executed a mima program\nand the IAR points to the end of your defined memory.\nYou can set the IAR (e.g. to zero) with the 'i' command.\n\n");
+            char res = getchar();
+            if (res != 'y')
+            {
+                break;
+            }
+        }
+
+        mima->control_unit.RUN = mima_true;
+
         while(mima->control_unit.RUN)
         {
             mima_micro_instruction_step(mima);
@@ -205,6 +235,8 @@ void mima_run(mima_t *mima, mima_bool interactive)
 
 void mima_run_instruction_steps(mima_t *mima, char *arg)
 {
+    mima->control_unit.RUN = mima_true;
+
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
 
@@ -235,6 +267,8 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
 void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 {
+    mima->control_unit.RUN = mima_true;
+
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
 
@@ -540,6 +574,7 @@ void mima_instruction_HLT(mima_t *mima)
     log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
     log_info("  HLT - Stopping Mima");
     mima->control_unit.RUN = mima_false;
+    mima->processing_unit.MICRO_CYCLE = 0;
 }
 
 void mima_instruction_LDC(mima_t *mima)
@@ -822,7 +857,7 @@ void mima_print_processing_unit_state(mima_t *mima)
     printf(" Y  \t    = 0x%08x\n", mima->processing_unit.Y);
     printf(" Z  \t    = 0x%08x\n", mima->processing_unit.Z);
     printf(" MICRO_CYCLE= %02d\n", mima->processing_unit.MICRO_CYCLE);
-    printf(" ALU\t    = %s\n", mima_get_instruction_name(mima->current_instruction.op_code));
+    printf(" ALU\t    = %s\n", mima_get_instruction_name(mima->processing_unit.ALU));
     printf("=========================\n");
 }
 
