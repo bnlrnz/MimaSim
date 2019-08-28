@@ -73,8 +73,11 @@ void mima_delete(mima_t *mima);
 
 mima_bool mima_compile(mima_t *mima, const char *file_name);
 
-void mima_run(mima_t *mima);
-void mima_instruction_step(mima_t *mima);
+void mima_run(mima_t *mima, mima_bool interactive);
+void mima_run_micro_instruction_steps(mima_t *mima, char* steps);
+void mima_run_instruction_steps(mima_t *mima, char* steps);
+
+void mima_micro_instruction_step(mima_t *mima);
 
 mima_instruction mima_instruction_decode(mima_t *mima);
 mima_bool mima_sar_external(mima_t *mima);
@@ -94,7 +97,7 @@ void mima_instruction_RRN(mima_t *mima);
 const char *mima_get_instruction_name(mima_instruction_type instruction);
 
 void mima_print_state(mima_t *mima);
-void mima_print_memory_at(mima_t *mima, mima_register address);
+void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count);
 void mima_print_memory_unit_state(mima_t *mima);
 void mima_print_control_unit_state(mima_t *mima);
 void mima_print_processing_unit_state(mima_t *mima);

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     mima_t mima = mima_init();
 
-    log_set_level(LOG_DEBUG);
+    log_set_level(LOG_TRACE);
 
     if (!mima_compile(&mima, fileName))
     {
@@ -23,13 +23,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    mima_run(&mima);
-
-    mima_print_state(&mima);
-    mima_print_memory_at(&mima, 0);
-
-    printf("\nDefined memory:\n");
-    mima_print_memory_at(&mima, 0xFF0);
+    mima_run(&mima, mima_true);
 
     mima_delete(&mima);
 

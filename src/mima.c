@@ -53,13 +53,199 @@ mima_t mima_init()
     return mima;
 }
 
-void mima_run(mima_t *mima)
+void mima_prompt_print_help()
+{
+    printf("s [#]           runs # micro instructions \n");
+    printf("S [#]           runs # instructions \n");
+    printf("S               runs/ends current instruction\n");
+    printf("m addr [#]      prints # lines of memory at address\n");
+    printf("r               runs program till end or breakpoint\n");
+    printf("p               prints mima state\n");
+    printf("L [LOG_LEVEL]   prints or sets the log level\n");
+    printf("q               quits mima\n");
+}
+
+void mima_prompt_print_memory(mima_t *mima, char *arg)
+{
+    char *endptr;
+    mima_register address;
+    uint32_t count;
+
+    address = strtol(arg, &endptr, 0);
+
+    // if no address provided, print from IAR
+    if(endptr == arg) address = mima->control_unit.IAR;
+
+    arg = endptr;
+
+    count = strtol(arg, &endptr, 0);
+    if(endptr == arg) count = 10;
+
+    mima_print_memory_at(mima, address, count);
+}
+
+void mima_prompt_set_log_level(char *arg)
+{
+    if (strncmp(arg + 1, "FATAL", 5) == 0)
+    {
+        log_set_level(LOG_FATAL);
+    }
+    else if (strncmp(arg + 1, "ERROR", 5) == 0)
+    {
+        log_set_level(LOG_ERROR);
+    }
+    else if (strncmp(arg + 1, "WARN", 4) == 0)
+    {
+        log_set_level(LOG_WARN);
+    }
+    else if (strncmp(arg + 1, "INFO", 4) == 0)
+    {
+        log_set_level(LOG_INFO);
+    }
+    else if (strncmp(arg + 1, "DEBUG", 5) == 0)
+    {
+        log_set_level(LOG_DEBUG);
+    }
+    else if (strncmp(arg + 1, "TRACE", 5) == 0)
+    {
+        log_set_level(LOG_TRACE);
+    }
+    else
+    {
+        printf("Current Log Levels: %s\n", log_get_level_name());
+        printf("Available Log Levels: TRACE, DEBUG, INFO, WARN, ERROR, FATAL\n");
+    }
+
+}
+
+int mima_prompt_execute_command(mima_t *mima, char *input)
+{
+    switch(input[0])
+    {
+    case 's':
+        mima_run_micro_instruction_steps(mima, input + 1);
+        break;
+    case 'S':
+        mima_run_instruction_steps(mima, input + 1);
+        break;
+    case 'm':
+        mima_prompt_print_memory(mima, input + 1);
+        break;
+    case 'r':
+    {
+        while(mima->control_unit.RUN)
+        {
+            mima_micro_instruction_step(mima);
+
+            // TODO: check breakpoints
+        }
+        break;
+    }
+    case 'L':
+        mima_prompt_set_log_level(input + 1);
+        break;
+    case 'p':
+        mima_print_state(mima);
+        break;
+    case 'q':
+        return 0;
+    default:
+        mima_prompt_print_help();
+        break;
+    }
+
+    return 1;
+}
+
+int mima_prompt(mima_t *mima)
+{
+    static char last_command[32] = "S";
+    char command[32];
+    char *input;
+
+    printf("mima_shell> ");
+    input = fgets(command, 31, stdin);
+
+    if(!input)
+    {
+        printf("\n");
+        return 1;
+    }
+
+    input[strlen(input) - 1] = 0;
+
+    if (strlen(input) == 0)
+    {
+        strcpy(input, last_command);
+    }
+    else
+    {
+        strcpy(last_command, input);
+    }
+
+    return mima_prompt_execute_command(mima, input);
+}
+
+void mima_run(mima_t *mima, mima_bool interactive)
 {
     log_info("\n\n==========================\nStarting Mima...\n==========================\n");
-    while(mima->control_unit.RUN == mima_true)
+    if (interactive)
     {
-        mima_instruction_step(mima);
-        //int c = getchar();
+        while(mima_prompt(mima)) {};
+    }
+    else
+    {
+        while(mima->control_unit.RUN)
+        {
+            mima_micro_instruction_step(mima);
+            // do not check for breakpoints here
+        }
+    }
+}
+
+void mima_run_instruction_steps(mima_t *mima, char *arg)
+{
+    char *endptr;
+    int steps = strtol(arg, &endptr, 0);
+
+    if(endptr == arg)
+        steps = 1;
+
+    // if current instruction was not fully executed, end it
+    int current_micro_cycle = mima->processing_unit.MICRO_CYCLE;
+
+    if (current_micro_cycle != 1)
+    {
+        while( current_micro_cycle++ != 13 && mima->control_unit.RUN )
+        {
+            mima_micro_instruction_step(mima);
+        }
+        return;
+    }
+
+
+    steps *= 12; // 12 micro step = 1 instruction
+    while( (steps--) && mima->control_unit.RUN )
+    {
+        mima_micro_instruction_step(mima);
+
+        // TODO: check breakpoints
+    }
+}
+
+void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
+{
+    char *endptr;
+    int steps = strtol(arg, &endptr, 0);
+
+    if(endptr == arg)
+        steps = 1;
+
+    while( (steps--) && mima->control_unit.RUN )
+    {
+        mima_micro_instruction_step(mima);
+
+        // TODO: check breakpoints
     }
 }
 
@@ -100,7 +286,7 @@ mima_bool mima_sar_external(mima_t *mima)
     return mima_false;
 }
 
-void mima_instruction_step(mima_t *mima)
+void mima_micro_instruction_step(mima_t *mima)
 {
     //FETCH: first 5 cycles are the same for all instructions
     switch(mima->processing_unit.MICRO_CYCLE)
@@ -455,11 +641,14 @@ void mima_instruction_JMN(mima_t *mima)
     case 12:
         log_trace("  JMN - %02d: empty");
 
-        if((int32_t)mima->processing_unit.ACC < 0){
+        if((int32_t)mima->processing_unit.ACC < 0)
+        {
             log_info("  JMN - taken to 0x%08x", mima->control_unit.IR & 0x0FFFFFFF);
-        }else{
+        }
+        else
+        {
             log_info("  JMN - not taken");
-        }   
+        }
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -589,7 +778,7 @@ void mima_instruction_RRN(mima_t *mima)
     }
 }
 
-void mima_print_memory_at(mima_t *mima, mima_register address)
+void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count)
 {
     if (address < 0 || address > mima_words - 1)
     {
@@ -597,7 +786,7 @@ void mima_print_memory_at(mima_t *mima, mima_register address)
         return;
     }
 
-    for (int i = 0; address + i < mima_words - 1 && i < 10; ++i)
+    for (int i = 0; address + i < mima_words - 1 && i < count; ++i)
     {
         printf("mem[0x%08x] = 0x%08x\n", address + i, mima->memory_unit.memory[address + i]);
     }
@@ -607,8 +796,8 @@ void mima_print_memory_unit_state(mima_t *mima)
 {
     printf("\n");
     printf("=======MEMORY UNIT=======\n");
-    printf("SIR = 0x%08x\n", mima->memory_unit.SIR);
-    printf("SAR = 0x%08x\n", mima->memory_unit.SAR);
+    printf(" SIR\t    = 0x%08x\n", mima->memory_unit.SIR);
+    printf(" SAR\t    = 0x%08x\n", mima->memory_unit.SAR);
     printf("=========================\n");
 }
 
@@ -616,11 +805,11 @@ void mima_print_control_unit_state(mima_t *mima)
 {
     printf("\n");
     printf("=======CONTROL UNIT======\n");
-    printf("IR  = 0x%08x\n", mima->control_unit.IR);
-    printf("IAR = 0x%08x\n", mima->control_unit.IAR);
-    printf("IP  = 0x%08x\n", mima->control_unit.IP);
-    printf("TRA = %s\n", mima->control_unit.TRA ? "true" : "false");
-    printf("RUN = %s\n", mima->control_unit.RUN ? "true" : "false");
+    printf(" IR \t    = 0x%08x\n", mima->control_unit.IR);
+    printf(" IAR\t    = 0x%08x\n", mima->control_unit.IAR);
+    printf(" IP \t    = 0x%08x\n", mima->control_unit.IP);
+    printf(" TRA\t    = %s\n", mima->control_unit.TRA ? "true" : "false");
+    printf(" RUN\t    = %s\n", mima->control_unit.RUN ? "true" : "false");
     printf("=========================\n");
 }
 
@@ -628,12 +817,12 @@ void mima_print_processing_unit_state(mima_t *mima)
 {
     printf("\n");
     printf("=======PROC UNIT=========\n");
-    printf("ACC = 0x%08x\n", mima->processing_unit.ACC);
-    printf("X   = 0x%08x\n", mima->processing_unit.X);
-    printf("Y   = 0x%08x\n", mima->processing_unit.Y);
-    printf("Z   = 0x%08x\n", mima->processing_unit.Z);
-    printf("MICRO_CYCLE = %02d\n", mima->processing_unit.MICRO_CYCLE);
-    printf("ALU = %s\n", mima_get_instruction_name(mima->current_instruction.op_code));
+    printf(" ACC\t    = 0x%08x\n", mima->processing_unit.ACC);
+    printf(" X  \t    = 0x%08x\n", mima->processing_unit.X);
+    printf(" Y  \t    = 0x%08x\n", mima->processing_unit.Y);
+    printf(" Z  \t    = 0x%08x\n", mima->processing_unit.Z);
+    printf(" MICRO_CYCLE= %02d\n", mima->processing_unit.MICRO_CYCLE);
+    printf(" ALU\t    = %s\n", mima_get_instruction_name(mima->current_instruction.op_code));
     printf("=========================\n");
 }
 
