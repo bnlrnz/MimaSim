@@ -55,7 +55,7 @@ mima_t mima_init()
 
 void mima_run(mima_t *mima)
 {
-    log_trace("\n\n==========================\nStarting Mima...\n==========================\n");
+    log_info("\n\n==========================\nStarting Mima...\n==========================\n");
     while(mima->control_unit.RUN == mima_true)
     {
         mima_instruction_step(mima);
@@ -242,6 +242,7 @@ void mima_instruction_common(mima_t *mima)
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
         log_trace("%5s - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
+        log_info("%5s - ACC = 0x%08x", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -276,6 +277,7 @@ void mima_instruction_LDV(mima_t *mima)
         break;
     case 12:
         log_trace("  LDV - %02d: empty");
+        log_info("  LDV - ACC = 0x%08x", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -339,6 +341,7 @@ void mima_instruction_STV(mima_t *mima)
         break;
     case 12:
         log_trace("  STV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
+        log_info("  STV - 0x%08x -> mem[0x%08x]", mima->memory_unit.SIR, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -349,6 +352,7 @@ void mima_instruction_STV(mima_t *mima)
 void mima_instruction_HLT(mima_t *mima)
 {
     log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
+    log_info("  HLT - Stopping Mima");
     mima->control_unit.RUN = mima_false;
 }
 
@@ -377,6 +381,7 @@ void mima_instruction_LDC(mima_t *mima)
         break;
     case 12:
         log_trace("  LDC - %02d: empty");
+        log_info("  LDC - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -409,6 +414,7 @@ void mima_instruction_JMP(mima_t *mima)
         break;
     case 12:
         log_trace("  JMP - %02d: empty");
+        log_info("  JMP - to 0x%08x", mima->control_unit.IAR);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -448,6 +454,12 @@ void mima_instruction_JMN(mima_t *mima)
         break;
     case 12:
         log_trace("  JMN - %02d: empty");
+
+        if((int32_t)mima->processing_unit.ACC < 0){
+            log_info("  JMN - taken to 0x%08x", mima->control_unit.IR & 0x0FFFFFFF);
+        }else{
+            log_info("  JMN - not taken");
+        }   
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -483,6 +495,7 @@ void mima_instruction_NOT(mima_t *mima)
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
         log_trace("  NOT - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
+        log_info("  NOT - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -525,6 +538,7 @@ void mima_instruction_RAR(mima_t *mima)
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
         log_trace("  RAR - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
+        log_info("  RAR - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -567,6 +581,7 @@ void mima_instruction_RRN(mima_t *mima)
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
         log_trace("  RRN - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
+        log_info("  RRN - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     mima_t mima = mima_init();
 
-    log_set_level(LOG_TRACE);
+    log_set_level(LOG_DEBUG);
 
     if (!mima_compile(&mima, fileName))
     {

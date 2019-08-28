@@ -112,6 +112,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         return mima_false;
     }
 
+    log_info("Compiling %s ...", file_name);
+
     char line[256];
     size_t line_number = 0;
     size_t memory_address = 0;
