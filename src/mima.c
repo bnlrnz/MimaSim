@@ -323,9 +323,49 @@ void mima_instruction_LDV(mima_t *mima)
         log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...");
         break;
     case 9:
-        mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
-        log_trace("  LDV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
+    {
+        mima_register address = mima->memory_unit.SAR;
+
+        if (address < 0xC000000)
+        {
+            // internal memory
+            mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+            log_trace("  LDV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
+        }
+        else
+        {
+            mima->control_unit.TRA = mima_false;
+
+            // I/O space
+            if (address == mima_char_input)
+            {
+                printf("Waiting for single char:");
+                char res = getchar();
+                mima->memory_unit.SIR = res;
+                log_trace("  LDV - %02d: Char -> SIR \t\t '%c' -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, res);
+                mima->control_unit.TRA = mima_true;
+                break;
+            }
+
+            if (address == mima_integer_input)
+            {
+                printf("Waiting for number (dec or hex [with 0x-prefix]):");
+                char number_string[32] = {0};
+                char* endptr;
+                fgets(number_string, 31, stdin);
+                int number = strtol(number_string, &endptr, 0);
+                mima->memory_unit.SIR = number;
+                log_trace("  LDV - %02d: Integer -> SIR \t\t %d aka 0x%08x -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, number, number);
+                mima->control_unit.TRA = mima_true;
+                break;
+            }
+
+
+            log_warn("Writing into undefined I/O space. Nothing will happen!");
+
+        }
         break;
+    }
     case 10:
         mima->processing_unit.ACC = mima->memory_unit.SIR;
         log_trace("  LDV - %02d: SIR -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
@@ -365,18 +405,17 @@ void mima_instruction_STV(mima_t *mima)
     {
         mima_register address = mima->control_unit.IR & 0x0FFFFFFF;
 
-        log_trace("  STV - %02d: SIR -> mem[IR & 0x0FFFFFFF] \t 0x%08x -> mem[0x%08x] \t I/O Write done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
-
         // writing to "internal" memory
         if (address < 0xc000000)
         {
             mima->memory_unit.memory[address] = mima->memory_unit.SIR;
+            log_trace("  STV - %02d: SIR -> mem[IR & 0x0FFFFFFF] \t 0x%08x -> mem[0x%08x] \t I/O Write done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
             break;
         }
         else
         {
             // writing to IO -> ignoring the  first 4 bits
-            if (address == mima_ascii_output)
+            if (address == mima_char_output)
             {
                 printf("%c\n", mima->memory_unit.SIR & 0x0FFFFFFF);
                 break;

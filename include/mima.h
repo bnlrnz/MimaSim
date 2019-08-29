@@ -16,9 +16,10 @@ typedef uint8_t 	mima_bool;
 #define mima_true 	1
 #define mima_false	0
 
-#define mima_key_input 		0xc000001
-#define mima_ascii_output 	0xc000002
-#define mima_integer_output	0xc000003
+#define mima_char_input		0xc000001
+#define mima_integer_input  0xc000002
+#define mima_char_output 	0xc000003
+#define mima_integer_output	0xc000004
 
 typedef enum _mima_instruction_type
 {
