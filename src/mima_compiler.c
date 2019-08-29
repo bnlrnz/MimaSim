@@ -51,86 +51,139 @@ mima_bool mima_string_starts_with_insensitive(const char *string, const char* pr
 
 mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
 {
-
-    *op_code = -1;
+    uint32_t op_code_result = -1;
 
     // thank god, this was done in sublime!
     if (mima_string_starts_with_insensitive(op_code_string, "and"))
     {
-        *op_code = AND;
+        op_code_result = AND;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "add"))
     {
-        *op_code = ADD;
+        op_code_result = ADD;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "or"))
     {
-        *op_code = OR ;
+        op_code_result = OR ;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "xor"))
     {
-        *op_code = XOR;
+        op_code_result = XOR;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "ldv"))
     {
-        *op_code = LDV;
+        op_code_result = LDV;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "stv"))
     {
-        *op_code = STV;
+        op_code_result = STV;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "ldc"))
     {
-        *op_code = LDC;
+        op_code_result = LDC;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "jmp"))
     {
-        *op_code = JMP;
+        op_code_result = JMP;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "jmn"))
     {
-        *op_code = JMN;
+        op_code_result = JMN;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "eql"))
     {
-        *op_code = EQL;
+        op_code_result = EQL;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "hlt"))
     {
-        *op_code = HLT;
+        op_code_result = HLT;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "not"))
     {
-        *op_code = NOT;
+        op_code_result = NOT;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "rar"))
     {
-        *op_code = RAR;
+        op_code_result = RAR;
     }
     else if (mima_string_starts_with_insensitive(op_code_string, "rrn"))
     {
-        *op_code = RRN;
+        op_code_result = RRN;
     }
 
-    if (*op_code == -1)
+    if (op_code_result == -1)
     {
         return mima_false;
     }
 
+    // Only assign the opcode if asked for:
+    if (op_code != NULL)
+    {
+        *op_code = op_code_result;
+    }
+
     return mima_true;
+}
+
+void mima_scan_for_labels(FILE *file)
+{
+    // This function ignores all syntactical errors and does not log anything.
+    // All those diagnostics are applied inside "mima_compile_file()".
+    // Here, we will only look for labels.
+    // But labels are placed at memory addresses.
+    // As a consequence, we still have to discriminate between whitespace lines / comments and instructions, though.
+
+    char line[256];
+    size_t line_number = 0;
+    size_t memory_address = 0;
+    while(fgets(line, sizeof(line), file))
+    {
+        line_number++;
+        char *string = strtok(line, " \r\n");
+
+        if (string == NULL)
+        {
+            continue;
+        }
+
+        // Check for opcodes:
+        if (mima_string_to_op_code(string, NULL))
+        {
+            // Step over the opcode, but increment the memory address.
+            memory_address++;
+            continue;
+        }
+
+        // Check for labels -> safe for later and remeber line number aka address
+        if (string[0] == ':')
+        {
+            log_trace("Line %03zu: %3s for address 0x%08x", line_number, &string[1], memory_address);
+            mima_push_label(&string[1], memory_address, line_number);
+            continue;
+        }
+
+        // Ignore everything else here.
+    }
+
+    log_trace("Found %zu label(s) while scanning the input file.", labels_count);
 }
 
 mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 {
     FILE *file = fopen(file_name, "r");
 
-    if(!file)
+    if (!file)
     {
         log_error("Failed to open source code file: %s :(", file_name);
         return mima_false;
     }
 
     log_info("Compiling %s ...", file_name);
+
+    // First, scan the file for labels.
+    // This two-pass approach allows us to use them without forward declaration.
+    mima_scan_for_labels(file);
+    fseek(file, 0, SEEK_SET);
 
     char line[256];
     size_t line_number = 0;
@@ -145,7 +198,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         string1 = strtok(line, " \r\n");
 
-        if(string1 == NULL)
+        if (string1 == NULL)
         {
             log_warn("Line %03zu: Found nothing useful in \"%s\"", line_number, line);
             error++;
@@ -154,7 +207,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         // classify first string, possible things:
         // op code          like: ADD AND OR ...
-        // label            like: :Label1, :START, :loop ...
+        // label            like: :Label1, :START, :loop (will be ignored, we have already collected them while scanning) ...
         // address + value  like: 0xF1, 0xFA8 ... = define storage
         // breakpoint       like: b or B
 
@@ -194,8 +247,6 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         // string1 is a label -> safe for later and remeber line number aka address
         if (string1[0] == ':')
         {
-            log_trace("Line %03zu: %3s for address 0x%08x", line_number, &string1[1], memory_address);
-            mima_push_label(&string1[1], memory_address, line_number);
             continue;
         }
 
@@ -206,7 +257,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
             string2 = strtok(NULL, delimiter);
 
-            if(!mima_string_to_number(string2, &value))
+            if (!mima_string_to_number(string2, &value))
             {
                 log_error("Found address at line %d - value should follow, but did not.", line_number);
                 error++;
@@ -220,7 +271,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         }
 
         // line comment
-        if(strncmp(string1, "//", 2) == 0 || string1[0] == '#')
+        if (strncmp(string1, "//", 2) == 0 || string1[0] == '#')
         {
             log_trace("Line %03zu: Ignoring comment \"%s\"...", line_number, string1);
             continue;
@@ -248,7 +299,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
 void mima_push_label(const char *label_name, uint32_t address, size_t line)
 {
-    if(labels_count + 1 > labels_capacity)
+    if (labels_count + 1 > labels_capacity)
     {
         labels_capacity *= 2; // double the size
         mima_labels = realloc(mima_labels, sizeof(mima_label) * labels_capacity);
@@ -259,7 +310,7 @@ void mima_push_label(const char *label_name, uint32_t address, size_t line)
         }
     }
 
-    if(strlen(label_name) > 31)
+    if (strlen(label_name) > 31)
     {
         log_error("Line %03zu: Label size is limited by 32 chars.", line);
     }
@@ -288,7 +339,7 @@ uint32_t mima_address_for_label(const char *label_name, size_t line)
 
 mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code, uint32_t value, size_t line)
 {
-    if(op_code < 0 || op_code > 0xFF)
+    if (op_code < 0 || op_code > 0xFF)
     {
         log_error("Line %03zu: Invalid op code %d", line, op_code);
         return mima_false;
@@ -301,7 +352,7 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
         return mima_true;
     }
 
-    if(value < 0 || value > 0x0FFFFFFF)
+    if (value < 0 || value > 0x0FFFFFFF)
     {
         log_error("Line %03zu: Invalid value %d", line, op_code);
         return mima_false;
