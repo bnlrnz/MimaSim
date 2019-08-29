@@ -7,14 +7,20 @@ void mima_shell_print_help()
 {
     printf("\n=====================\n mima_shell commands \n=====================\n");
     printf(" s [#].........runs # micro instructions \n");
+    printf(" s.............equals \"s 1\"\n");
     printf(" S [#].........runs # instructions \n");
-    printf(" S.............runs/ends current instruction\n");
+    printf(" S.............equals \"S 1\" or ends current instruction\n");
     printf(" m addr [#]....prints # lines of memory at address\n");
-    printf(" i addr........sets the IAR to address\n");
+    printf(" m addr........prints 10 lines of memory at address\n");
+    printf(" m.............prints 10 lines of memory at IAR\n");
+    printf(" i [addr]......sets the IAR to address\n");
+    printf(" i.............sets the IAR to zero\n");
     printf(" r.............runs program till end or breakpoint\n");
     printf(" p.............prints mima state\n");
-    printf(" L [LOG_LEVEL].prints or sets the log level\n");
+    printf(" L [LOG_LEVEL].sets the log level\n");
+    printf(" L.............prints current and available log level\n");
     printf(" q.............quits mima\n");
+    printf(" -ENTER-.......repeats last command\n");
     printf("=====================\n");
 }
 

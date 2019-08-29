@@ -66,7 +66,7 @@ void mima_run(mima_t *mima, mima_bool interactive)
         while(mima->control_unit.RUN)
         {
             mima_micro_instruction_step(mima);
-            // do not check for breakpoints here
+            // do not check for breakpoints here -> it's non interactive mode
         }
     }
 }
