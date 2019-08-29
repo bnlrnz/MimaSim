@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "mima.h"
 #include "mima_compiler.h"
 #include "log.h"
@@ -31,65 +32,82 @@ mima_bool mima_string_to_number(const char *string, uint32_t *number)
     return mima_false;
 }
 
+mima_bool mima_string_starts_with_insensitive(const char *string, const char* prefix)
+{
+    int prefix_char;
+
+    while ((prefix_char = (int)*prefix++) != 0)
+    {
+        int string_char = (int)*string++;
+
+        if ((string_char == 0) || (tolower(prefix_char) != tolower(string_char)))
+        {
+            return mima_false;
+        }
+    }
+
+    return mima_true;
+}
+
 mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
 {
 
     *op_code = -1;
 
     // thank god, this was done in sublime!
-    if (strncmp(op_code_string, "AND", 3) == 0 || strncmp(op_code_string, "and", 3) == 0)
+    if (mima_string_starts_with_insensitive(op_code_string, "and"))
     {
         *op_code = AND;
     }
-    else if (strncmp(op_code_string, "ADD", 3) == 0 || strncmp(op_code_string, "add", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "add"))
     {
         *op_code = ADD;
     }
-    else if (strncmp(op_code_string, "OR", 2) == 0 || strncmp(op_code_string, "or", 2) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "or"))
     {
         *op_code = OR ;
     }
-    else if (strncmp(op_code_string, "XOR", 3) == 0 || strncmp(op_code_string, "xor", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "xor"))
     {
         *op_code = XOR;
     }
-    else if (strncmp(op_code_string, "LDV", 3) == 0 || strncmp(op_code_string, "ldv", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "ldv"))
     {
         *op_code = LDV;
     }
-    else if (strncmp(op_code_string, "STV", 3) == 0 || strncmp(op_code_string, "stv", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "stv"))
     {
         *op_code = STV;
     }
-    else if (strncmp(op_code_string, "LDC", 3) == 0 || strncmp(op_code_string, "ldc", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "ldc"))
     {
         *op_code = LDC;
     }
-    else if (strncmp(op_code_string, "JMP", 3) == 0 || strncmp(op_code_string, "jmp", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "jmp"))
     {
         *op_code = JMP;
     }
-    else if (strncmp(op_code_string, "JMN", 3) == 0 || strncmp(op_code_string, "jmn", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "jmn"))
     {
         *op_code = JMN;
     }
-    else if (strncmp(op_code_string, "EQL", 3) == 0 || strncmp(op_code_string, "eql", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "eql"))
     {
         *op_code = EQL;
     }
-    else if (strncmp(op_code_string, "HLT", 3) == 0 || strncmp(op_code_string, "hlt", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "hlt"))
     {
         *op_code = HLT;
     }
-    else if (strncmp(op_code_string, "NOT", 3) == 0 || strncmp(op_code_string, "not", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "not"))
     {
         *op_code = NOT;
     }
-    else if (strncmp(op_code_string, "RAR", 3) == 0 || strncmp(op_code_string, "rar", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "rar"))
     {
         *op_code = RAR;
     }
-    else if (strncmp(op_code_string, "RRN", 3) == 0 || strncmp(op_code_string, "rrn", 3) == 0)
+    else if (mima_string_starts_with_insensitive(op_code_string, "rrn"))
     {
         *op_code = RRN;
     }
