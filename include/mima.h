@@ -44,30 +44,48 @@ typedef struct _mima_control_unit
 
 typedef struct _mima_memory_unit
 {
-    mima_register 	SIR;
-    mima_register 	SAR;
-    mima_word 		*memory;
+    mima_register 	 SIR;
+    mima_register 	 SAR;
+    mima_word 		 *memory;
 } mima_memory_unit;
 
 typedef struct _mima_processing_unit
 {
     const mima_register 	ONE;
-    mima_register 	ACC;
-    mima_register 	X;
-    mima_register 	Y;
-    mima_register 	Z;
-    mima_instruction_type ALU;
-    uint8_t			MICRO_CYCLE;
+    mima_register 	        ACC;
+    mima_register 	        X;
+    mima_register 	        Y;
+    mima_register 	        Z;
+    mima_instruction_type   ALU;
+    uint8_t                 MICRO_CYCLE;
     //		ALU;
 } mima_processing_unit;
+
+// forward declaration
+struct _mima_t;
+typedef void (*mima_io_callback_fun)(struct _mima_t* mima,mima_register*);
+typedef struct _mima_io_callback{
+    mima_io_callback_fun func;
+    mima_register address;
+}mima_io_callback;
 
 typedef struct _mima_t
 {
     mima_control_unit 		control_unit;
     mima_memory_unit 		memory_unit;
     mima_processing_unit 	processing_unit;
+    
     mima_instruction 		current_instruction;
+
+    mima_io_callback        *stv_callbacks;
+    uint32_t                stv_callbacks_count;
+    uint32_t                stv_callbacks_capacity;
+
+    mima_io_callback        *ldv_callbacks;
+    uint32_t                ldv_callbacks_count;
+    uint32_t                ldv_callbacks_capacity;
 } mima_t;
+
 
 mima_t mima_init();
 void mima_delete(mima_t *mima);
@@ -102,5 +120,8 @@ void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count);
 void mima_print_memory_unit_state(mima_t *mima);
 void mima_print_control_unit_state(mima_t *mima);
 void mima_print_processing_unit_state(mima_t *mima);
+
+mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr);
+mima_bool mima_register_IO_STV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr);
 
 #endif // mima_h

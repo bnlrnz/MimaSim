@@ -31,7 +31,11 @@ mima_t mima_init()
             .Y   = 0,
             .Z   = 0,
             .MICRO_CYCLE = 1 // 1 - 12 cycles per instruction
-        }
+        },
+        .stv_callbacks_count = 0,
+        .stv_callbacks_capacity = 8,
+        .ldv_callbacks_count = 0,
+        .ldv_callbacks_capacity = 8
     };
 
     // we allocate mima words aka 32 Bit integers
@@ -48,6 +52,22 @@ mima_t mima_init()
     if (!mima_labels)
     {
         log_fatal("Could not allocate memory for labels :(\n");
+        assert(0);
+    }
+
+    mima.stv_callbacks = malloc(mima.stv_callbacks_capacity * sizeof(mima_io_callback));
+
+    if (!mima.stv_callbacks)
+    {
+        log_fatal("Could not allocate memory for stv_callbacks :/\n");
+        assert(0);
+    }
+
+    mima.ldv_callbacks = malloc(mima.ldv_callbacks_capacity * sizeof(mima_io_callback));
+
+    if (!mima.ldv_callbacks)
+    {
+        log_fatal("Could not allocate memory for ldv_callbacks :/\n");
         assert(0);
     }
 
@@ -334,7 +354,7 @@ void mima_instruction_LDV(mima_t *mima)
         }
         else
         {
-            mima->control_unit.TRA = mima_false;
+            mima->control_unit.TRA = mima_true;
 
             // I/O space
             if (address == mima_char_input)
@@ -343,7 +363,7 @@ void mima_instruction_LDV(mima_t *mima)
                 char res = getchar();
                 mima->memory_unit.SIR = res;
                 log_trace("  LDV - %02d: Char -> SIR \t\t '%c' -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, res);
-                mima->control_unit.TRA = mima_true;
+                mima->control_unit.TRA = mima_false;
                 break;
             }
 
@@ -351,18 +371,28 @@ void mima_instruction_LDV(mima_t *mima)
             {
                 printf("Waiting for number (dec or hex [with 0x-prefix]):");
                 char number_string[32] = {0};
-                char* endptr;
+                char *endptr;
                 fgets(number_string, 31, stdin);
                 int number = strtol(number_string, &endptr, 0);
                 mima->memory_unit.SIR = number;
                 log_trace("  LDV - %02d: Integer -> SIR \t\t %d aka 0x%08x -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, number, number);
-                mima->control_unit.TRA = mima_true;
+                mima->control_unit.TRA = mima_false;
                 break;
             }
 
+            mima_bool taken = mima_false;
+            for (int i = 0; i < mima->ldv_callbacks_count; ++i)
+            {
+                if (mima->ldv_callbacks[i].address == address)
+                {
+                    log_info("  STV - %02d: Calling callback function...", mima->processing_unit.MICRO_CYCLE);
+                    mima->ldv_callbacks[i].func(mima, &mima->memory_unit.SIR);
+                    taken = mima_true;
+                }
+            }
 
-            log_warn("Writing into undefined I/O space. Nothing will happen!");
-
+            if(!taken)
+                log_warn("Reading from undefined I/O space. This will (probably) be garbage!");
         }
         break;
     }
@@ -404,6 +434,7 @@ void mima_instruction_STV(mima_t *mima)
     case 10:
     {
         mima_register address = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_register value   = mima->memory_unit.SIR & 0x0FFFFFFF;
 
         // writing to "internal" memory
         if (address < 0xc000000)
@@ -414,20 +445,37 @@ void mima_instruction_STV(mima_t *mima)
         }
         else
         {
+            mima->control_unit.TRA = mima_true;
+
             // writing to IO -> ignoring the  first 4 bits
             if (address == mima_char_output)
             {
-                printf("%c\n", mima->memory_unit.SIR & 0x0FFFFFFF);
+                printf("%c\n", value);
+                mima->control_unit.TRA = mima_false;
                 break;
             }
 
             if (address == mima_integer_output)
             {
-                printf("%d\n", mima->memory_unit.SIR & 0x0FFFFFFF);
+                printf("%d\n", value);
+                mima->control_unit.TRA = mima_false;
                 break;
             }
 
-            log_warn("Writing into undefined I/O space. Nothing will happen!");
+            mima_bool taken = mima_false;
+            for (int i = 0; i < mima->stv_callbacks_count; ++i)
+            {
+                if (mima->stv_callbacks[i].address == address)
+                {
+                    log_info("  STV - %02d: Calling callback function", mima->processing_unit.MICRO_CYCLE);
+                    mima->stv_callbacks[i].func(mima, &value);
+                    taken = mima_true;
+                    break;
+                }
+            }
+
+            if (!taken)
+                log_warn("Writing into undefined I/O space. Nothing will happen!");
 
             break;
         }
@@ -783,8 +831,85 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
 
 void mima_delete(mima_t *mima)
 {
+    free(mima->stv_callbacks);
+    free(mima->ldv_callbacks);
     free(mima->memory_unit.memory);
     free(mima_labels);
 }
 
+mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
+{
+    for (int i = 0; i < mima->ldv_callbacks_count; ++i)
+    {
+        if(address == mima->ldv_callbacks[i].address)
+        {
+            log_warn("Address 0x%08x already registered for ldv callback. Overwriting existing function pointer!", address);
+            break;
+        }
+    }
+
+    if (address < 0x0C000004 || address > 0xFFFFFFFF)
+    {
+        log_error("Could not register io ldv callback. Address exceeds I/O space.");
+        log_error("You can use 0x0C000005 - 0xFFFFFFFF.");
+        return mima_true;
+    }
+
+    if(mima->ldv_callbacks_count + 1 > mima->ldv_callbacks_capacity)
+    {
+        mima->ldv_callbacks_capacity *= 2; // double the size
+        mima->ldv_callbacks = realloc(mima->ldv_callbacks, sizeof(mima_io_callback) * mima->ldv_callbacks_capacity);
+
+        if (!mima->ldv_callbacks)
+        {
+            log_error("Could not realloc memory for ldv callbacks.");
+            return mima_false;
+        }
+    }
+
+    mima->ldv_callbacks[mima->ldv_callbacks_count].func = fun_ptr;
+    mima->ldv_callbacks[mima->ldv_callbacks_count].address = address;
+    log_info("Registered LDV callback for address 0x%08x", address);
+
+    mima->ldv_callbacks_count++;
+    return mima_true;
+}
+
+mima_bool mima_register_IO_STV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
+{
+    for (int i = 0; i < mima->stv_callbacks_count; ++i)
+    {
+        if(address == mima->stv_callbacks[i].address)
+        {
+            log_warn("Address 0x%08x already registered for stv callback. Overwriting existing function pointer!", address);
+            break;
+        }
+    }
+
+    if (address < 0x0C000004 || address > 0xFFFFFFFF)
+    {
+        log_error("Could not register io stv callback. Address exceeds I/O space.");
+        log_error("You can use 0x0C000005 - 0xFFFFFFFF.");
+        return mima_false;
+    }
+
+    if(mima->stv_callbacks_count + 1 > mima->stv_callbacks_capacity)
+    {
+        mima->stv_callbacks_capacity *= 2; // double the size
+        mima->stv_callbacks = realloc(mima->stv_callbacks, sizeof(mima_io_callback) * mima->stv_callbacks_capacity);
+
+        if (!mima->stv_callbacks)
+        {
+            log_error("Could not realloc memory for stv callbacks.");
+            return mima_false;
+        }
+    }
+
+    mima->stv_callbacks[mima->stv_callbacks_count].func = fun_ptr;
+    mima->stv_callbacks[mima->stv_callbacks_count].address = address;
+    log_info("Registered STV callback for address 0x%08x", address);
+
+    mima->stv_callbacks_count++;
+    return mima_true;
+}
 
