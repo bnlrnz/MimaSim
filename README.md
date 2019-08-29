@@ -1,7 +1,7 @@
 # MimaSim
 A Mima Simulator written in C
 
-## Build
+### Build
 
 ```bash
 $make
@@ -13,6 +13,12 @@ $mkdir build
 $cd build
 $cmake ../
 $make
+```
+
+### Run
+
+```bash
+$./MimaSim fibonacci.asm
 ```
 
 ## Mima Assembler Instructions
