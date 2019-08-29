@@ -55,6 +55,14 @@ mima_t mima_init()
         assert(0);
     }
 
+    mima_breakpoints = malloc(breakpoints_capacity * sizeof(mima_breakpoint));
+
+    if (!mima_breakpoints)
+    {
+        log_fatal("Could not allocate memory for breakpoints :(\n");
+        assert(0);
+    }
+
     mima.stv_callbacks = malloc(mima.stv_callbacks_capacity * sizeof(mima_io_callback));
 
     if (!mima.stv_callbacks)
@@ -119,7 +127,11 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
     {
         mima_micro_instruction_step(mima);
 
-        // TODO: check breakpoints
+        if (mima_hit_active_breakpoint(mima))
+        {
+            mima->control_unit.RUN = mima_false;
+            mima_shell(mima);
+        }
     }
 }
 
@@ -137,7 +149,11 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
     {
         mima_micro_instruction_step(mima);
 
-        // TODO: check breakpoints
+        if (mima_hit_active_breakpoint(mima))
+        {
+            mima->control_unit.RUN = mima_false;
+            mima_shell(mima);
+        }
     }
 }
 
@@ -835,6 +851,7 @@ void mima_delete(mima_t *mima)
     free(mima->ldv_callbacks);
     free(mima->memory_unit.memory);
     free(mima_labels);
+    free(mima_breakpoints);
 }
 
 mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
@@ -913,3 +930,21 @@ mima_bool mima_register_IO_STV_callback(mima_t *mima, uint32_t address, mima_io_
     return mima_true;
 }
 
+mima_bool mima_hit_active_breakpoint(mima_t* mima)
+{
+    // only stop at instructions, not inbetween
+    if (mima->processing_unit.MICRO_CYCLE-1 % 12 != 0)
+    {
+        return mima_false;    
+    }
+
+    for (int i = 0; i < breakpoints_count; ++i)
+    {
+        if(mima_breakpoints[i].address == mima->control_unit.IAR && mima_breakpoints[i].active){
+            log_warn("Hit");
+            return mima_true;
+        }
+    }
+
+    return mima_false;
+}

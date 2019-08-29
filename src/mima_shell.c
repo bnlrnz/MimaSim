@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mima_shell.h"
+#include "mima_compiler.h"
 #include "log.h"
 
 void mima_shell_print_help()
@@ -22,6 +23,17 @@ void mima_shell_print_help()
     printf(" q.............quits mima\n");
     printf(" -ENTER-.......repeats last command\n");
     printf("=====================\n");
+}
+
+void mima_shell_toggle_breakpoint(uint32_t address){
+    for (int i = 0; i < breakpoints_count; ++i)
+    {
+        if(mima_breakpoints[i].address == address)
+        {
+            mima_breakpoints[i].active = !mima_breakpoints[i].active;
+            return;
+        }
+    }    
 }
 
 void mima_shell_set_IAR(mima_t *mima, char *arg)
@@ -123,7 +135,10 @@ int mima_shell_execute_command(mima_t *mima, char *input)
         {
             mima_micro_instruction_step(mima);
 
-            // TODO: check breakpoints
+            if(mima_hit_active_breakpoint(mima)){
+                mima->control_unit.RUN = mima_false;
+                mima_shell(mima);
+            }
         }
         break;
     }

@@ -64,9 +64,10 @@ typedef struct _mima_processing_unit
 // forward declaration
 struct _mima_t;
 typedef void (*mima_io_callback_fun)(struct _mima_t* mima,mima_register*);
+
 typedef struct _mima_io_callback{
-    mima_io_callback_fun func;
-    mima_register address;
+    mima_io_callback_fun    func;
+    mima_register           address;
 }mima_io_callback;
 
 typedef struct _mima_t
@@ -123,5 +124,7 @@ void mima_print_processing_unit_state(mima_t *mima);
 
 mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr);
 mima_bool mima_register_IO_STV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr);
+
+mima_bool mima_hit_active_breakpoint(mima_t* mima);
 
 #endif // mima_h

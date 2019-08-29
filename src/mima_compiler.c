@@ -8,7 +8,10 @@
 const char* delimiter = " \n\r";
 
 uint32_t labels_count = 0;
-uint32_t labels_capacity = INITIAL_LABEL_CAPACITY;
+uint32_t labels_capacity = INITIAL_CAPACITY;
+
+uint32_t breakpoints_count = 0;
+uint32_t breakpoints_capacity = INITIAL_CAPACITY;
 
 mima_bool mima_string_to_number(const char *string, uint32_t *number)
 {
@@ -208,7 +211,13 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
             continue;
         }
 
-        // TODO: Breakpoints
+        // Breakpoints
+        if (string1[0] == 'B')
+        {
+            mima_push_breakpoint(memory_address, mima_true, line_number);
+            log_trace("Line %03zu: Set Breakpoint at 0x%08x", line_number, memory_address);
+            continue;
+        }
 
         log_warn("Line %03zu: Ignoring - \"%s\"", line_number, line);
     }
@@ -292,4 +301,32 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
 
     *instruction = (op_code << 28) | (value & 0x0FFFFFFF);
     return mima_true;
+}
+
+void mima_push_breakpoint(uint32_t address, mima_bool is_active, size_t line){
+    
+    for (int i = 0; i < breakpoints_count; ++i)
+    {
+        if(mima_breakpoints[i].address == address)
+        {
+            mima_breakpoints[i].active = is_active;
+            return;
+        }
+    }
+
+    if(breakpoints_count + 1 > breakpoints_capacity)
+    {
+        breakpoints_capacity *= 2; // double the size
+        mima_breakpoints = realloc(mima_breakpoints, sizeof(mima_breakpoint) * breakpoints_capacity);
+
+        if (!mima_breakpoints)
+        {
+            log_error("Line %03zu: Could not realloc memory for breakpoints.", line);
+        }
+    }
+
+    mima_breakpoints[breakpoints_count].address = address;
+    mima_breakpoints[breakpoints_count].active = is_active;
+
+    breakpoints_count++;
 }
