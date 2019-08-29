@@ -98,8 +98,46 @@ LDC 42
 STV 0xC000003   // will print a '*' to the terminal
 LDC 0x40
 STV 0xC000004   // will print a 64 to the terminal
+```
+You can register callback functions for I/O and a specific address.
+These callbacks should always set the TRA Bit to mima_false when finished.
+
+```C
+void get_number(mima_t *mima, mima_register *value)
+{
+    printf("Type integer:");
+    char number_string[32] = {0};
+    char *endptr;
+    fgets(number_string, 31, stdin);
+    *value = strtol(number_string, &endptr, 0);
+    mima->control_unit.TRA = mima_false;
+}
+
+void print_number(mima_t* mima, mima_register* value)
+{
+    printf("Fib: %d\n", *value);
+    mima->control_unit.TRA = mima_false;
+}
+
+int main(int argc, char **argv)
+{
+    const char *fileName = argv[1];
+    mima_t mima = mima_init();
+
+    mima_compile(&mima, fileName);
+
+    mima_register_IO_LDV_callback(&mima, 0x0c000005, get_number);
+    mima_register_IO_STV_callback(&mima, 0x0c000006, print_number);
+
+    mima_run(&mima, mima_true);
+
+    mima_delete(&mima);
+
+    return 0;
+}
 
 ```
+
 ##### Comments
 
 Every lines first "word" that could not be identified as mnemonic, address, nor label, will be ignored.
