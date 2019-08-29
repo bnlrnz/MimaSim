@@ -78,16 +78,16 @@ Addresses above **0x0C00 0000** are used for memory mapped I/O.
 
 There are some defined addresses you can use to output information to the terminal:
 
-- **0x0c000001** Char Input
-- **0x0c000002** Integer Input
-- **0x0c000003** Char Output
-- **0x0c000004** Integer Output
+- **0x0c000001** single char input
+- **0x0c000002** integer input
+- **0x0c000003** single char output
+- **0x0c000004** integer output
 
 e.g.
 
 ```
-LDV 0xC000001   // will ask for single char input
-LDV 0xC000002   // will ask for integer input
+LDV 0xC000001   // will ask for single char
+LDV 0xC000002   // will ask for integer
 LDC 42
 STV 0xC000003   // will print a '*' to the terminal
 LDC 0x40
