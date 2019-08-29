@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -c -Wall -O3 -Iinclude
-DEBUG = -DDEBUG
 LD = $(CC)
 
 UNAME_S := $(shell uname -s)
@@ -19,11 +18,7 @@ $(TARGET): $(OBJECTS)
 clean:
 	rm -rf $(TARGET) $(OBJECTS)
 
+debug: CFLAGS += -DDEBUG -g
 debug: $(TARGET)
 
-$(TARGET): $(OBJECTS)
-	$(LD) -o $@ $^ $(LDFLAGS)
-
-%.o: %.c
-	$(CC) $(CFLAGS) $(DEBUG) $^ -o $@
 	
