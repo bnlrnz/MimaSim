@@ -181,6 +181,8 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
         return mima_false;
     }
 
+    mima->source_file = file_name;
+    
     log_info("Compiling %s ...", file_name);
 
     // First, scan the file for labels.

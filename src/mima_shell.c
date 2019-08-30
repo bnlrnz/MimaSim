@@ -20,6 +20,7 @@ void mima_shell_print_help()
     printf(" p.............prints mima state\n");
     printf(" L [LOG_LEVEL].sets the log level\n");
     printf(" L.............prints current and available log level\n");
+    printf(" l.............prints the source file\n");
     printf(" b addr........sets or toggles breakpoint at address\n");
     printf(" b.............lists all breakpoints and their state\n");
     printf(" q.............quits mima\n");
@@ -151,6 +152,27 @@ int mima_shell_execute_command(mima_t *mima, char *input)
                 mima_shell(mima);
             }
         }
+        break;
+    }
+    case 'l':
+    {
+        FILE *file = fopen(mima->source_file, "r");
+
+        if (!file)
+        {
+            log_error("Failed to open source code file: %s :(", mima->source_file);
+            break;
+        }
+
+        char line[256];
+        size_t line_number = 1;
+        
+        while(fgets(line, sizeof(line), file))
+        {
+            printf("%03zu: %s", line_number, line);
+            line_number++;
+        }
+        printf("\n");
         break;
     }
     case 'b':

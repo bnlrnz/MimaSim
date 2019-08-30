@@ -85,6 +85,8 @@ typedef struct _mima_t
     mima_io_callback        *ldv_callbacks;
     uint32_t                ldv_callbacks_count;
     uint32_t                ldv_callbacks_capacity;
+
+    const char*				source_file;
 } mima_t;
 
 
@@ -100,7 +102,7 @@ void mima_run_instruction_steps(mima_t *mima, char* steps);
 void mima_micro_instruction_step(mima_t *mima);
 
 mima_instruction mima_instruction_decode(mima_t *mima);
-mima_instruction mima_instruction_decode(mima_word mem);
+mima_instruction mima_instruction_decode_mem(mima_word mem);
 
 mima_bool mima_sar_external(mima_t *mima);
 
