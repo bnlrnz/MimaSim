@@ -143,7 +143,7 @@ int mima_shell_execute_command(mima_t *mima, char *input)
 
         mima->control_unit.RUN = mima_true;
 
-        while(mima->control_unit.RUN)
+        while(mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
         {
             mima_micro_instruction_step(mima);
 

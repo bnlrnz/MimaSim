@@ -91,7 +91,7 @@ void mima_run(mima_t *mima, mima_bool interactive)
     }
     else
     {
-        while(mima->control_unit.RUN)
+        while(mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
         {
             mima_micro_instruction_step(mima);
             // do not check for breakpoints here -> it's non interactive mode
@@ -114,7 +114,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
     if (current_micro_cycle != 1)
     {
-        while( current_micro_cycle++ != 13 && mima->control_unit.RUN )
+        while( current_micro_cycle++ != 13 && mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
         {
             mima_micro_instruction_step(mima);
         }
@@ -123,7 +123,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
 
     steps *= 12; // 12 micro step = 1 instruction
-    while( (steps--) && mima->control_unit.RUN )
+    while( (steps--) && mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
     {
         mima_micro_instruction_step(mima);
 
@@ -145,7 +145,7 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
     if(endptr == arg)
         steps = 1;
 
-    while( (steps--) && mima->control_unit.RUN )
+    while( (steps--) && mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
     {
         mima_micro_instruction_step(mima);
 
@@ -403,9 +403,16 @@ void mima_instruction_LDV(mima_t *mima)
             {
                 if (mima->ldv_callbacks[i].address == address)
                 {
-                    log_info("  STV - %02d: Calling callback function...", mima->processing_unit.MICRO_CYCLE);
+                    log_info("  LDV - %02d: Calling callback function...", mima->processing_unit.MICRO_CYCLE);
                     mima->ldv_callbacks[i].func(mima, &mima->memory_unit.SIR);
+
+                    if (mima->control_unit.TRA == mima_true)
+                    {
+                        log_warn("  LDV - %02d: I/O callback functions should always set the TRA flag to mima_false, when finished! Otherwise, the mima stops...", mima->processing_unit.MICRO_CYCLE);
+                    }
+
                     taken = mima_true;
+                    break;
                 }
             }
 
@@ -487,6 +494,12 @@ void mima_instruction_STV(mima_t *mima)
                 {
                     log_info("  STV - %02d: Calling callback function", mima->processing_unit.MICRO_CYCLE);
                     mima->stv_callbacks[i].func(mima, &value);
+
+                    if (mima->control_unit.TRA == mima_true)
+                    {
+                        log_warn("  STV - %02d: I/O callback functions should always set the TRA flag to mima_false, when finished! Otherwise, the mima stops...", mima->processing_unit.MICRO_CYCLE);
+                    }
+
                     taken = mima_true;
                     break;
                 }
