@@ -766,7 +766,8 @@ void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count)
 
     for (int i = 0; address + i < mima_words - 1 && i < count; ++i)
     {
-        printf("mem[0x%08x] = 0x%08x\n", address + i, mima->memory_unit.memory[address + i]);
+        mima_instruction instruction = mima_instruction_decode_mem(mima->memory_unit.memory[address + i]);
+        printf("mem[0x%08x] = 0x%08x = %s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
     }
 }
 
