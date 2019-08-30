@@ -1,5 +1,6 @@
 # MimaSim
-A Mima Simulator written in C
+A Mima Simulator written in C.
+The MiMa (aka Mininal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). 
 
 ### Build
 
@@ -19,6 +20,31 @@ $make
 
 ```bash
 $./MimaSim fibonacci.asm
+```
+
+## Mima Shell
+
+While running the mima interactively (**mima_run()**'s second parameter must be **mima_true** to access mima shell), one can type the following commands:
+
+```
+s [#].........runs # micro instructions 
+s.............equals s 1
+S [#].........runs # instructions 
+S.............equals S 1 or ends current instruction
+m addr [#]....prints # lines of memory at address
+m addr........prints 10 lines of memory at address
+m.............prints 10 lines of memory at IAR
+i [addr]......sets the IAR to address
+i.............sets the IAR to zero
+r.............runs program till end or breakpoint
+p.............prints mima state
+L [LOG_LEVEL].sets the log level
+L.............prints current and available log level
+l.............prints the source file
+b addr........sets or toggles breakpoint at address
+b.............lists all breakpoints and their state
+q.............quits mima
+-ENTER-.......repeats last command
 ```
 
 ## Mima Assembler Instructions
@@ -56,7 +82,6 @@ STV   0xFF1
 
 - labels are case sensitive
 - it's not a good idea to jump to a self defined address, unless you know what you are doing
-- for now, labels MUST be declared before a jump
 
 ```
 :Loop         // this is a label/jump target
@@ -64,6 +89,18 @@ LDV   0xAFFE  // some fancy calculation
 NOT
 STV   0xAFFE
 JMP Loop      // will jump to label :Loop
+```
+
+##### Breakpoints
+
+- breakpoints are set in source code by typing a upper case 'B' on a separate line or interactively in the mima shell
+- when in mima shell, breakpoints can be toggled on/off
+
+```
+LDV 0xF1
+ADD 0xF2
+B
+STV 0xF1
 ```
 
 ##### Define storage
