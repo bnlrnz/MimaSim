@@ -162,11 +162,8 @@ mima_bool mima_compile(mima_t *mima, const char *file_name)
     return mima_compile_file(mima, file_name);
 }
 
-mima_instruction mima_instruction_decode(mima_t *mima)
+mima_instruction mima_instruction_decode(mima_word mem)
 {
-
-    mima_word mem = mima->memory_unit.memory[mima->memory_unit.SAR];
-
     mima_instruction instr;
 
     if(mem >> 28 != 0xF)
@@ -185,6 +182,11 @@ mima_instruction mima_instruction_decode(mima_t *mima)
     }
 
     return instr;
+}
+
+mima_instruction mima_instruction_decode(mima_t *mima)
+{
+    return mima_instruction_decode(mima->memory_unit.memory[mima->memory_unit.SAR]);
 }
 
 mima_bool mima_sar_external(mima_t *mima)
