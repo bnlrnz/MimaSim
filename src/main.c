@@ -10,13 +10,13 @@ void get_number(mima_t *mima, mima_register *value)
     char *endptr;
     fgets(number_string, 31, stdin);
     *value = strtol(number_string, &endptr, 0);
-    //mima->control_unit.TRA = mima_false;
+    mima->control_unit.TRA = mima_false;
 }
 
 void print_number(mima_t* mima, mima_register* value)
 {
     printf("Fib: %d\n", *value);
-    //mima->control_unit.TRA = mima_false;
+    mima->control_unit.TRA = mima_false;
 }
 
 int main(int argc, char **argv)
