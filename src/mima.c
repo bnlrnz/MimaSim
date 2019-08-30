@@ -15,7 +15,6 @@ mima_t mima_init()
         .control_unit = {
             .IR  = 0,
             .IAR = 0,
-            .IP  = 0,
             .TRA = 0,
             .RUN = mima_true
         },
@@ -799,7 +798,6 @@ void mima_print_control_unit_state(mima_t *mima)
     printf("=======CONTROL UNIT======\n");
     printf(" IR \t    = 0x%08x\n", mima->control_unit.IR);
     printf(" IAR\t    = 0x%08x\n", mima->control_unit.IAR);
-    printf(" IP \t    = 0x%08x\n", mima->control_unit.IP);
     printf(" TRA\t    = %s\n", mima->control_unit.TRA ? "true" : "false");
     printf(" RUN\t    = %s\n", mima->control_unit.RUN ? "true" : "false");
     printf("=========================\n");

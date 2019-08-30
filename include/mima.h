@@ -37,7 +37,6 @@ typedef struct _mima_control_unit
 {
     mima_register 	IR;
     mima_register 	IAR;
-    mima_register 	IP;
     mima_flag 		TRA;
     mima_flag 		RUN;
 } mima_control_unit;
