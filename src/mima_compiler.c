@@ -160,7 +160,7 @@ void mima_scan_for_labels(FILE *file)
         // Check for labels -> safe for later and remeber line number aka address
         if (string[0] == ':')
         {
-            log_trace("Line %03zu: %3s for address 0x%08x", line_number, &string[1], memory_address);
+            log_trace("Line %03zu: Label %3s for address 0x%08x", line_number, &string[1], memory_address);
             mima_push_label(&string[1], memory_address, line_number);
             continue;
         }
@@ -374,11 +374,12 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
 
 void mima_push_breakpoint(uint32_t address, mima_bool is_active, size_t line){
     
+    // if breakpoint exists -> toggle
     for (int i = 0; i < breakpoints_count; ++i)
     {
         if(mima_breakpoints[i].address == address)
         {
-            mima_breakpoints[i].active = is_active;
+            mima_breakpoints[i].active = !mima_breakpoints[i].active;
             return;
         }
     }

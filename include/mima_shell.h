@@ -4,7 +4,7 @@
 #include "mima.h"
 
 void mima_shell_print_help();
-void mima_shell_toggle_breakpoint(uint32_t address);
+void mima_shell_set_breakpoint(mima_t* mima, char *arg);
 void mima_shell_set_IAR(mima_t *mima, char *arg);
 void mima_shell_print_memory(mima_t *mima, char *arg);
 void mima_shell_set_log_level(char *arg);

@@ -941,7 +941,7 @@ mima_bool mima_hit_active_breakpoint(mima_t* mima)
     for (int i = 0; i < breakpoints_count; ++i)
     {
         if(mima_breakpoints[i].address == mima->control_unit.IAR && mima_breakpoints[i].active){
-            log_warn("Hit");
+            log_info("Hit breakpoint at 0x%08x", mima_breakpoints[i].address);
             return mima_true;
         }
     }

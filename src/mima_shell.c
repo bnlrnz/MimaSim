@@ -20,20 +20,11 @@ void mima_shell_print_help()
     printf(" p.............prints mima state\n");
     printf(" L [LOG_LEVEL].sets the log level\n");
     printf(" L.............prints current and available log level\n");
+    printf(" b addr........sets or toggles breakpoint at address\n");
+    printf(" b.............lists all breakpoints and their state\n");
     printf(" q.............quits mima\n");
     printf(" -ENTER-.......repeats last command\n");
     printf("=====================\n");
-}
-
-void mima_shell_toggle_breakpoint(uint32_t address){
-    for (int i = 0; i < breakpoints_count; ++i)
-    {
-        if(mima_breakpoints[i].address == address)
-        {
-            mima_breakpoints[i].active = !mima_breakpoints[i].active;
-            return;
-        }
-    }    
 }
 
 void mima_shell_set_IAR(mima_t *mima, char *arg)
@@ -45,6 +36,26 @@ void mima_shell_set_IAR(mima_t *mima, char *arg)
         address = 0;
 
     mima->control_unit.IAR = address;
+}
+
+void mima_shell_set_breakpoint(mima_t* mima, char *arg)
+{
+    char *endptr;
+    mima_register address;
+
+    address = strtol(arg, &endptr, 0);
+
+    // if no address provided, print from breakpoints
+    if(endptr == arg)
+    {    
+        for (int i = 0; i < breakpoints_count; ++i)
+        {
+            printf("Breakpoint at 0x%08x: %s\n", mima_breakpoints[i].address, mima_breakpoints[i].active ? "active" : "not active");
+        }
+        return;
+    }
+
+    mima_push_breakpoint(address, mima_true, 0);
 }
 
 void mima_shell_print_memory(mima_t *mima, char *arg)
@@ -142,6 +153,9 @@ int mima_shell_execute_command(mima_t *mima, char *input)
         }
         break;
     }
+    case 'b':
+        mima_shell_set_breakpoint(mima, input + 1);
+        break;
     case 'L':
         mima_shell_set_log_level(input + 1);
         break;
