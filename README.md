@@ -137,7 +137,7 @@ LDC 0x40
 STV 0xC000004   // will print a 64 to the terminal
 ```
 You can register callback functions for I/O and a specific address.
-These callbacks should always set the TRA Bit to mima_false when finished.
+These callbacks should always set the TRA Bit to **mima_false** when finished.
 
 ```C
 void get_number(mima_t *mima, mima_register *value)
