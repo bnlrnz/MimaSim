@@ -128,7 +128,52 @@ mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
     return mima_true;
 }
 
-void mima_scan_for_labels(FILE *file)
+void mima_scan_line_for_label(char* line, size_t* line_number, size_t* memory_address)
+{
+        char *string = strtok(line, " \r\n");
+        
+        if (string == NULL)
+        {
+            return;
+        }
+
+        // Check for opcodes:
+        if (mima_string_to_op_code(string, NULL))
+        {
+            // Step over the opcode, but increment the memory address.
+            (*memory_address)++;
+            return;
+        }
+
+        // Check for labels -> safe for later and remeber line number aka address
+        if (string[0] == ':')
+        {
+            log_trace("Line %03zu: Label %3s for address 0x%08x", *line_number, &string[1], *memory_address);
+            mima_push_label(&string[1], *memory_address, *line_number);
+            return;
+        }
+
+}
+
+void mima_scan_string_for_labels(char* source_code)
+{
+    char * current_line = source_code;
+    size_t line_number = 0;
+    size_t memory_address = 0;
+    while(current_line)
+    {
+        line_number++;
+        char * next_line = strchr(current_line, '\n');
+        if (next_line) *next_line = '\0';  // temporarily terminate the current line
+              
+        mima_scan_line_for_label(next_line, &line_number, &memory_address);
+
+        if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
+        current_line = next_line ? (next_line+1) : NULL;
+    }
+}
+
+void mima_scan_file_for_labels(FILE *file)
 {
     // This function ignores all syntactical errors and does not log anything.
     // All those diagnostics are applied inside "mima_compile_file()".
@@ -142,62 +187,16 @@ void mima_scan_for_labels(FILE *file)
     while(fgets(line, sizeof(line), file))
     {
         line_number++;
-        char *string = strtok(line, " \r\n");
 
-        if (string == NULL)
-        {
-            continue;
-        }
-
-        // Check for opcodes:
-        if (mima_string_to_op_code(string, NULL))
-        {
-            // Step over the opcode, but increment the memory address.
-            memory_address++;
-            continue;
-        }
-
-        // Check for labels -> safe for later and remeber line number aka address
-        if (string[0] == ':')
-        {
-            log_trace("Line %03zu: Label %3s for address 0x%08x", line_number, &string[1], memory_address);
-            mima_push_label(&string[1], memory_address, line_number);
-            continue;
-        }
-
+        mima_scan_line_for_label(line, &line_number, &memory_address);
         // Ignore everything else here.
     }
 
     log_trace("Found %zu label(s) while scanning the input file.", labels_count);
 }
 
-mima_bool mima_compile_file(mima_t *mima, const char *file_name)
+void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* memory_address, size_t* error)
 {
-    FILE *file = fopen(file_name, "r");
-
-    if (!file)
-    {
-        log_error("Failed to open source code file: %s :(", file_name);
-        return mima_false;
-    }
-
-    mima->source_file = file_name;
-    
-    log_info("Compiling %s ...", file_name);
-
-    // First, scan the file for labels.
-    // This two-pass approach allows us to use them without forward declaration.
-    mima_scan_for_labels(file);
-    fseek(file, 0, SEEK_SET);
-
-    char line[256];
-    size_t line_number = 0;
-    size_t memory_address = 0;
-    size_t error = 0;
-    while(fgets(line, sizeof(line), file))
-    {
-        line_number++;
-
         char *string1 = NULL;
         char *string2 = NULL;
 
@@ -205,9 +204,9 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
         if (string1 == NULL)
         {
-            log_warn("Line %03zu: Found nothing useful in \"%s\"", line_number, line);
-            error++;
-            continue;
+            log_warn("Line %03zu: Found nothing useful in \"%s\"", *line_number, line);
+            (*error)++;
+            return;
         }
 
         // classify first string, possible things:
@@ -231,28 +230,28 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
                 if (!mima_string_to_number(string2, &value))
                 {
                     // could not parse number string -> is there a label?
-                    value = mima_address_for_label(&string2[0], line_number);
+                    value = mima_address_for_label(&string2[0], *line_number);
                 }
             }
 
             mima_register instruction = 0;
 
-            if (!mima_assemble_instruction(&instruction, op_code, value, line_number))
+            if (!mima_assemble_instruction(&instruction, op_code, value, *line_number))
             {
-                log_error("Line %03zu: Could not assemble instruction: %s", line_number, line);
-                error++;
-                continue;
+                log_error("Line %03zu: Could not assemble instruction: %s", *line_number, line);
+                (*error)++;
+                return;
             }
 
-            log_trace("Line %03zu: %3s 0x%08x -> stored at mem[0x%08x]", line_number, mima_get_instruction_name(op_code), value, memory_address);
-            mima->memory_unit.memory[memory_address++] = instruction;
-            continue;
+            log_trace("Line %03zu: %3s 0x%08x -> stored at mem[0x%08x]", *line_number, mima_get_instruction_name(op_code), value, *memory_address);
+            mima->memory_unit.memory[(*memory_address)++] = instruction;
+            return;
         }
 
         // string1 is a label -> safe for later and remeber line number aka address
         if (string1[0] == ':')
         {
-            continue;
+            return;
         }
 
         // define storage: address + hexnumber
@@ -264,33 +263,101 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
             if (!mima_string_to_number(string2, &value))
             {
-                log_error("Found address at line %d - value should follow, but did not.", line_number);
-                error++;
+                log_error("Found address at line %d - value should follow, but did not.", *line_number);
+                (*error)++;
             }
 
-            log_trace("Line %03zu: Define mem[0x%08x] = 0x%08x", line_number, op_code, value);
+            log_trace("Line %03zu: Define mem[0x%08x] = 0x%08x", *line_number, op_code, value);
 
             // op_code holds the address in this case
             mima->memory_unit.memory[op_code] = value;
-            continue;
+            return;
         }
 
         // line comment
         if (strncmp(string1, "//", 2) == 0 || string1[0] == '#')
         {
-            log_trace("Line %03zu: Ignoring comment \"%s\"...", line_number, string1);
-            continue;
+            log_trace("Line %03zu: Ignoring comment \"%s\"...", *line_number, string1);
+            return;
         }
 
         // Breakpoints
         if (string1[0] == 'B')
         {
-            mima_push_breakpoint(memory_address, mima_true, line_number);
-            log_trace("Line %03zu: Set Breakpoint at 0x%08x", line_number, memory_address);
-            continue;
+            mima_push_breakpoint(*memory_address, mima_true, *line_number);
+            log_trace("Line %03zu: Set Breakpoint at 0x%08x", *line_number, *memory_address);
+            return;
         }
 
-        log_warn("Line %03zu: Ignoring - \"%s\"", line_number, line);
+        log_warn("Line %03zu: Ignoring - \"%s\"", *line_number, line);
+}
+
+mima_bool mima_compile_string(mima_t *mima, char *source_code)
+{
+    log_info("Compiling ...");
+
+    mima_scan_string_for_labels(source_code);
+
+    char * current_line = source_code;
+    size_t line_number = 0;
+    size_t memory_address = 0;
+    size_t error = 0;
+    while(current_line)
+    {
+        line_number++;
+        char * next_line = strchr(current_line, '\n');
+        if (next_line) *next_line = '\0';  // temporarily terminate the current line
+              
+        mima_compile_line(mima, next_line, &line_number, &memory_address, &error);
+
+        if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
+        current_line = next_line ? (next_line+1) : NULL;
+    }
+
+    if (error > 0)
+    {
+        log_error("Found %d error(s) or warning(s) while compiling.", error);
+        log_error("Setting mima RUN flag to false.");
+        log_error("Nothing will be executed...");
+        mima->control_unit.RUN = mima_false;
+        return mima_false;
+    }
+    else
+    {
+        log_info("Compiled without errors.");
+    }
+
+    return mima_true;
+}
+
+mima_bool mima_compile_file(mima_t *mima, const char *file_name)
+{
+    FILE *file = fopen(file_name, "r");
+
+    if (!file)
+    {
+        log_error("Failed to open source code file: %s :(", file_name);
+        return mima_false;
+    }
+
+    mima->source_file = file_name;
+    
+    log_info("Compiling %s ...", file_name);
+
+    // First, scan the file for labels.
+    // This two-pass approach allows us to use them without forward declaration.
+    mima_scan_file_for_labels(file);
+    fseek(file, 0, SEEK_SET);
+
+    char line[256];
+    size_t line_number = 0;
+    size_t memory_address = 0;
+    size_t error = 0;
+    while(fgets(line, sizeof(line), file))
+    {
+        line_number++;
+
+        mima_compile_line(mima, line, &line_number, &memory_address, &error);
     }
 
     if (error > 0)

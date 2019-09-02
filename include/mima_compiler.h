@@ -4,6 +4,7 @@
 #define INITIAL_CAPACITY 8
 
 mima_bool mima_compile_file(mima_t *mima, const char *file_name);
+mima_bool mima_compile_string(mima_t *mima, char *source_code);
 mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code, uint32_t value, size_t line);
 
 typedef struct _mima_label
