@@ -54,3 +54,9 @@ dkms.conf
 
 # CMake
 build
+
+# WEBASM
+MimaSim.html
+MimaSim.js
+MimaSim.wasm
+
