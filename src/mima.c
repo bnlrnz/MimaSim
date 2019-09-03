@@ -156,9 +156,14 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
     }
 }
 
-mima_bool mima_compile(mima_t *mima, const char *file_name)
+mima_bool mima_compile_f(mima_t *mima, const char *file_name)
 {
     return mima_compile_file(mima, file_name);
+}
+
+mima_bool mima_compile_s(mima_t* mima, char* source_code)
+{
+    return mima_compile_string(mima, source_code);
 }
 
 mima_instruction mima_instruction_decode_mem(mima_word mem)

@@ -92,7 +92,8 @@ typedef struct _mima_t
 mima_t mima_init();
 void mima_delete(mima_t *mima);
 
-mima_bool mima_compile(mima_t *mima, const char *file_name);
+mima_bool mima_compile_f(mima_t *mima, const char *file_name);
+mima_bool mima_compile_s(mima_t *mima, char * source_code);
 
 void mima_run(mima_t *mima, mima_bool interactive);
 void mima_run_micro_instruction_steps(mima_t *mima, char* steps);

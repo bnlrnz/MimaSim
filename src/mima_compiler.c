@@ -155,22 +155,29 @@ void mima_scan_line_for_label(char* line, size_t* line_number, size_t* memory_ad
 
 }
 
-void mima_scan_string_for_labels(char* source_code)
+void mima_scan_string_for_labels(const char* source_code)
 {
-    char * current_line = source_code;
+    char * source_code_copy = malloc(strlen(source_code)+1);
+    memset(source_code_copy, 0, strlen(source_code)+1);
+
+    strcpy(source_code_copy, source_code);
+
+    char * current_line = source_code_copy;
     size_t line_number = 0;
     size_t memory_address = 0;
     while(current_line)
     {
         line_number++;
         char * next_line = strchr(current_line, '\n');
-        if (next_line) *next_line = '\0';  // temporarily terminate the current line
+        //if (next_line) *next_line = '\0';  // temporarily terminate the current line
               
-        mima_scan_line_for_label(next_line, &line_number, &memory_address);
+        mima_scan_line_for_label(current_line, &line_number, &memory_address);
 
-        if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
+        //if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
         current_line = next_line ? (next_line+1) : NULL;
     }
+
+    free(source_code_copy);
 }
 
 void mima_scan_file_for_labels(FILE *file)
@@ -205,7 +212,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
         if (string1 == NULL)
         {
             log_warn("Line %03zu: Found nothing useful in \"%s\"", *line_number, line);
-            (*error)++;
+            //(*error)++;
             return;
         }
 
@@ -289,16 +296,22 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
             return;
         }
 
-        log_warn("Line %03zu: Ignoring - \"%s\"", *line_number, line);
+        log_error("Line %03zu: Error/Unknown command - \"%s\"", *line_number, line);
+        (*error)++;
 }
 
-mima_bool mima_compile_string(mima_t *mima, char *source_code)
+mima_bool mima_compile_string(mima_t *mima, const char *source_code)
 {
     log_info("Compiling ...");
 
     mima_scan_string_for_labels(source_code);
 
-    char * current_line = source_code;
+    char * source_code_copy = malloc(strlen(source_code)+1);
+    memset(source_code_copy, 0, strlen(source_code)+1);
+
+    strcpy(source_code_copy, source_code);
+
+    char * current_line = source_code_copy;
     size_t line_number = 0;
     size_t memory_address = 0;
     size_t error = 0;
@@ -306,13 +319,15 @@ mima_bool mima_compile_string(mima_t *mima, char *source_code)
     {
         line_number++;
         char * next_line = strchr(current_line, '\n');
-        if (next_line) *next_line = '\0';  // temporarily terminate the current line
-              
-        mima_compile_line(mima, next_line, &line_number, &memory_address, &error);
+        //if (next_line) *next_line = '\0';  // temporarily terminate the current line
+        
+        mima_compile_line(mima, current_line, &line_number, &memory_address, &error);
 
-        if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
+        //if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
         current_line = next_line ? (next_line+1) : NULL;
     }
+
+    free(source_code_copy);
 
     if (error > 0)
     {
