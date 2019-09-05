@@ -4,12 +4,16 @@
 #include <assert.h>
 #include <inttypes.h>
 
+#include "log.h"
 #include "mima.h"
 #include "mima_compiler.h"
 #include "mima_shell.h"
+#include "mima_webasm_interface.h"
 
 mima_t mima_init()
 {
+    log_set_level(LOG_DEBUG);
+
     mima_t mima =
     {
         .control_unit = {
@@ -46,17 +50,17 @@ mima_t mima_init()
         assert(0);
     }
 
-    mima_labels = malloc(labels_capacity * sizeof(mima_label));
+    mima.mima_labels = malloc(labels_capacity * sizeof(mima_label));
 
-    if (!mima_labels)
+    if (!mima.mima_labels)
     {
         log_fatal("Could not allocate memory for labels :(\n");
         assert(0);
     }
 
-    mima_breakpoints = malloc(breakpoints_capacity * sizeof(mima_breakpoint));
+    mima.mima_breakpoints = malloc(breakpoints_capacity * sizeof(mima_breakpoint));
 
-    if (!mima_breakpoints)
+    if (!mima.mima_breakpoints)
     {
         log_fatal("Could not allocate memory for breakpoints :(\n");
         assert(0);
@@ -96,6 +100,14 @@ void mima_run(mima_t *mima, mima_bool interactive)
             // do not check for breakpoints here -> it's non interactive mode
         }
     }
+}
+
+void mima_run_micro_instruction_step(mima_t *mima){
+    mima_run_micro_instruction_steps(mima, " 1\n");
+}
+
+void mima_run_instruction_step(mima_t *mima){
+    mima_run_instruction_steps(mima, " 1\n");
 }
 
 void mima_run_instruction_steps(mima_t *mima, char *arg)
@@ -381,6 +393,7 @@ void mima_instruction_LDV(mima_t *mima)
             // I/O space
             if (address == mima_char_input)
             {
+                mima_wasm_send_string("Waiting for single char:");
                 printf("Waiting for single char:");
                 char res = getchar();
                 mima->memory_unit.SIR = res;
@@ -391,6 +404,7 @@ void mima_instruction_LDV(mima_t *mima)
 
             if (address == mima_integer_input)
             {
+                mima_wasm_send_string("Waiting for number (dec or hex [with 0x-prefix]):");
                 printf("Waiting for number (dec or hex [with 0x-prefix]):");
                 char number_string[32] = {0};
                 char *endptr;
@@ -869,8 +883,8 @@ void mima_delete(mima_t *mima)
     free(mima->stv_callbacks);
     free(mima->ldv_callbacks);
     free(mima->memory_unit.memory);
-    free(mima_labels);
-    free(mima_breakpoints);
+    free(mima->mima_labels);
+    free(mima->mima_breakpoints);
 }
 
 mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
@@ -959,8 +973,8 @@ mima_bool mima_hit_active_breakpoint(mima_t* mima)
 
     for (int i = 0; i < breakpoints_count; ++i)
     {
-        if(mima_breakpoints[i].address == mima->control_unit.IAR && mima_breakpoints[i].active){
-            log_info("Hit breakpoint at 0x%08x", mima_breakpoints[i].address);
+        if(mima->mima_breakpoints[i].address == mima->control_unit.IAR && mima->mima_breakpoints[i].active){
+            log_info("Hit breakpoint at 0x%08x", mima->mima_breakpoints[i].address);
             return mima_true;
         }
     }

@@ -27,6 +27,8 @@
 #include <time.h>
 
 #include "log.h"
+#include "mima.h"
+#include "mima_webasm_interface.h"
 
 static struct {
   void *udata;
@@ -111,6 +113,16 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     char buf[16];
     buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
+#ifdef WEBASM
+    char message[256];
+    memset(message, 0, 256);
+    snprintf(message, 256, "%s %-5s: ", buf, level_names[level]);
+    va_start(args, fmt);
+    vsprintf(message + strlen(message), fmt, args);
+    va_end(args);
+    mima_wasm_send_string(message);
+    return;
+#endif
 #ifdef LOG_USE_COLOR
   #ifdef DEBUG
     fprintf(

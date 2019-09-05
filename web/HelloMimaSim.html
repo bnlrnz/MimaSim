@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <!-- 
+    numbering the textarea
+  -->
+
+  <style type="text/css">
+        #editor{
+          border:2px solid gray;position:relative;
+          height:720px;width:400px
+        }
+        #log_text{
+          border:2px solid gray;position:relative;
+          height:720px;width:600px
+        }
+  </style>
+  <link rel="stylesheet" type="text/css" href="./tln.css" />
+  <script type="text/javascript" src="./tln.js"></script>
+  <title></title>
+</head>
+<body>
+  <div class="flex-container">
+    <div id="editor">
+      <textarea id="source_code">0xFF0 1     // F0
+0xFF1 1     // F1
+0xFF2 0     // Fn
+0xFF3 1     // 1
+0xFFC 0     // Counter
+0xFFD 10    // Limit + 2
+LDV 0x0c000002  // ask for limit
+STV 0xFFD       // save limit
+LDV 0xFF0
+STV 0x0c000004
+STV 0x0c000004
+:LOOP
+LDV 0xFF0
+ADD 0xFF1
+STV 0xFF2
+STV 0x0c000004  // Output Fn
+LDV 0xFF1
+STV 0xFF0
+LDV 0xFF2
+STV 0xFF1
+LDV 0xFFC
+ADD 0xFF3
+STV 0xFFC
+EQL 0xFFD
+NOT
+JMN LOOP
+HLT</textarea>
+    </div>
+    <div class="flex-container-v" style="margin: 8px">
+      <input class="button" type="button" id="btn_compile" value="Compile" />
+      <div class="flex-container-v">
+        <input class="button" type="button" id="btn_run" value="Run" /> <input class="button" type="button" id="btn_step" value="Step" /> <input class="button" type="button" id="btn_mstep" value="Micro Step" />
+      </div>
+    </div>
+    <div style="height:720px;width:600px">
+      <div id="log_text" style="overflow: auto;" readonly="readonly"></div>
+    </div>
+  </div>
+  <script src="MimaSim.js"></script> 
+  <script>
+    TLN.append_line_numbers('source_code');
+
+    var MimaModel = {
+      IR: 0,
+      IAR: 0,
+      TRA: 0,
+      RUN: 1,
+      SIR: 0,
+      SAR: 0,
+      ACC: 0,
+      X: 0,
+      Y: 0,
+      Z: 0,
+      ALU: 0,
+      MICRO_CYCLE: 1
+    };
+
+    Module.onRuntimeInitialized = async _ => {
+      const mima = {
+        init:      Module.cwrap('mima_init', '', []),
+        compile_s: Module.cwrap('mima_compile_s', 'number', ['number','Uint8Array']),
+        step:      Module.cwrap('mima_run_instruction_step', '', ['number']),
+        mstep:     Module.cwrap('mima_run_micro_instruction_step', '', ['number']),
+        run:       Module.cwrap('mima_wasm_run', '', ['number']),
+      };
+
+      var mima_instance = mima.init();
+
+      document.getElementById('btn_compile').onclick = function(){
+        var value = document.getElementById('source_code').value;
+        var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
+        var res  = mima.compile_s(mima_instance, ptr);
+        _free(ptr);
+      };
+
+      document.getElementById('btn_step').onclick = function(){
+        mima.step(mima_instance);
+      };
+
+      document.getElementById('btn_mstep').onclick = function(){
+        mima.mstep(mima_instance);
+      };
+
+      document.getElementById('btn_run').onclick = async function(){
+        mima.run(mima_instance);
+      };
+    };
+  </script>
+  <title></title>
+</body>
+</html>

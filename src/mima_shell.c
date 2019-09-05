@@ -51,12 +51,12 @@ void mima_shell_set_breakpoint(mima_t* mima, char *arg)
     {    
         for (int i = 0; i < breakpoints_count; ++i)
         {
-            printf("Breakpoint at 0x%08x: %s\n", mima_breakpoints[i].address, mima_breakpoints[i].active ? "active" : "not active");
+            printf("Breakpoint at 0x%08x: %s\n", mima->mima_breakpoints[i].address, mima->mima_breakpoints[i].active ? "active" : "not active");
         }
         return;
     }
 
-    mima_push_breakpoint(address, mima_true, 0);
+    mima_push_breakpoint(mima, address, mima_true, 0);
 }
 
 void mima_shell_print_memory(mima_t *mima, char *arg)
@@ -130,7 +130,6 @@ int mima_shell_execute_command(mima_t *mima, char *input)
         break;
     case 'r':
     {
-
         if (mima->current_instruction.op_code == HLT && mima->control_unit.IAR != 0)
         {
             printf("Last instruction was HLT and IAR != 0. Are you shure you want to run the mima? -> y|N\n\nThis could result in a lot of ADD instructions if you just executed a mima program\nand the IAR points to the end of your defined memory.\nYou can set the IAR (e.g. to zero) with the 'i' command.\n\nBeware: the first run of your program could have modified the mima state or memory.\nThis could result in an endless loop.\n");

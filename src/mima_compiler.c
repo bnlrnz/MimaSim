@@ -5,6 +5,7 @@
 #include "mima.h"
 #include "mima_compiler.h"
 #include "log.h"
+#include "mima_webasm_interface.h"
 
 const char* delimiter = " \n\r";
 
@@ -128,7 +129,7 @@ mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
     return mima_true;
 }
 
-void mima_scan_line_for_label(char* line, size_t* line_number, size_t* memory_address)
+void mima_scan_line_for_label(mima_t* mima, char* line, size_t* line_number, size_t* memory_address)
 {
         char *string = strtok(line, " \r\n");
         
@@ -149,13 +150,13 @@ void mima_scan_line_for_label(char* line, size_t* line_number, size_t* memory_ad
         if (string[0] == ':')
         {
             log_trace("Line %03zu: Label %3s for address 0x%08x", *line_number, &string[1], *memory_address);
-            mima_push_label(&string[1], *memory_address, *line_number);
+            mima_push_label(mima, &string[1], *memory_address, *line_number);
             return;
         }
 
 }
 
-void mima_scan_string_for_labels(const char* source_code)
+void mima_scan_string_for_labels(mima_t* mima, const char* source_code)
 {
     char * source_code_copy = malloc(strlen(source_code)+1);
     memset(source_code_copy, 0, strlen(source_code)+1);
@@ -171,7 +172,7 @@ void mima_scan_string_for_labels(const char* source_code)
         char * next_line = strchr(current_line, '\n');
         //if (next_line) *next_line = '\0';  // temporarily terminate the current line
               
-        mima_scan_line_for_label(current_line, &line_number, &memory_address);
+        mima_scan_line_for_label(mima, current_line, &line_number, &memory_address);
 
         //if (next_line) *next_line = '\n';  // then restore newline-char, just to be tidy    
         current_line = next_line ? (next_line+1) : NULL;
@@ -180,7 +181,7 @@ void mima_scan_string_for_labels(const char* source_code)
     free(source_code_copy);
 }
 
-void mima_scan_file_for_labels(FILE *file)
+void mima_scan_file_for_labels(mima_t* mima, FILE *file)
 {
     // This function ignores all syntactical errors and does not log anything.
     // All those diagnostics are applied inside "mima_compile_file()".
@@ -195,7 +196,7 @@ void mima_scan_file_for_labels(FILE *file)
     {
         line_number++;
 
-        mima_scan_line_for_label(line, &line_number, &memory_address);
+        mima_scan_line_for_label(mima, line, &line_number, &memory_address);
         // Ignore everything else here.
     }
 
@@ -237,7 +238,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
                 if (!mima_string_to_number(string2, &value))
                 {
                     // could not parse number string -> is there a label?
-                    value = mima_address_for_label(&string2[0], *line_number);
+                    value = mima_address_for_label(mima, &string2[0], *line_number);
                 }
             }
 
@@ -291,7 +292,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
         // Breakpoints
         if (string1[0] == 'B')
         {
-            mima_push_breakpoint(*memory_address, mima_true, *line_number);
+            mima_push_breakpoint(mima, *memory_address, mima_true, *line_number);
             log_trace("Line %03zu: Set Breakpoint at 0x%08x", *line_number, *memory_address);
             return;
         }
@@ -304,7 +305,7 @@ mima_bool mima_compile_string(mima_t *mima, const char *source_code)
 {
     log_info("Compiling ...");
 
-    mima_scan_string_for_labels(source_code);
+    mima_scan_string_for_labels(mima, source_code);
 
     char * source_code_copy = malloc(strlen(source_code)+1);
     memset(source_code_copy, 0, strlen(source_code)+1);
@@ -339,7 +340,7 @@ mima_bool mima_compile_string(mima_t *mima, const char *source_code)
     }
     else
     {
-        log_info("Compiled without errors.");
+        log_info("Compiled %d lines without errors.", line_number);
     }
 
     return mima_true;
@@ -361,7 +362,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
     // First, scan the file for labels.
     // This two-pass approach allows us to use them without forward declaration.
-    mima_scan_file_for_labels(file);
+    mima_scan_file_for_labels(mima, file);
     fseek(file, 0, SEEK_SET);
 
     char line[256];
@@ -385,20 +386,20 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
     }
     else
     {
-        log_info("Compiled without errors.");
+        log_info("Compiled %d lines without errors.", line_number);
     }
 
     return mima_true;
 }
 
-void mima_push_label(const char *label_name, uint32_t address, size_t line)
+void mima_push_label(mima_t* mima, const char *label_name, uint32_t address, size_t line)
 {
     if (labels_count + 1 > labels_capacity)
     {
         labels_capacity *= 2; // double the size
-        mima_labels = realloc(mima_labels, sizeof(mima_label) * labels_capacity);
+        mima->mima_labels = realloc(mima->mima_labels, sizeof(mima_label) * labels_capacity);
 
-        if (!mima_labels)
+        if (!mima->mima_labels)
         {
             log_error("Line %03zu: Could not realloc memory for labels.", line);
         }
@@ -409,21 +410,21 @@ void mima_push_label(const char *label_name, uint32_t address, size_t line)
         log_error("Line %03zu: Label size is limited by 32 chars.", line);
     }
 
-    strncpy(mima_labels[labels_count].label_name, label_name, 31);
-    mima_labels[labels_count].address = address;
+    strncpy(mima->mima_labels[labels_count].label_name, label_name, 31);
+    mima->mima_labels[labels_count].address = address;
 
     labels_count++;
 }
 
-uint32_t mima_address_for_label(const char *label_name, size_t line)
+uint32_t mima_address_for_label(mima_t* mima, const char *label_name, size_t line)
 {
     for (int i = 0; i < labels_count; ++i)
     {
-        log_trace("Line %03zu: Searching for Label %s == %s", line, label_name, mima_labels[i].label_name);
+        log_trace("Line %03zu: Searching for Label %s == %s", line, label_name, mima->mima_labels[i].label_name);
 
-        if (strcmp(mima_labels[i].label_name, label_name) == 0)
+        if (strcmp(mima->mima_labels[i].label_name, label_name) == 0)
         {
-            return mima_labels[i].address;
+            return mima->mima_labels[i].address;
         }
     }
 
@@ -456,14 +457,14 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
     return mima_true;
 }
 
-void mima_push_breakpoint(uint32_t address, mima_bool is_active, size_t line){
+void mima_push_breakpoint(mima_t* mima, uint32_t address, mima_bool is_active, size_t line){
     
     // if breakpoint exists -> toggle
     for (int i = 0; i < breakpoints_count; ++i)
     {
-        if(mima_breakpoints[i].address == address)
+        if(mima->mima_breakpoints[i].address == address)
         {
-            mima_breakpoints[i].active = !mima_breakpoints[i].active;
+            mima->mima_breakpoints[i].active = !mima->mima_breakpoints[i].active;
             return;
         }
     }
@@ -471,16 +472,16 @@ void mima_push_breakpoint(uint32_t address, mima_bool is_active, size_t line){
     if(breakpoints_count + 1 > breakpoints_capacity)
     {
         breakpoints_capacity *= 2; // double the size
-        mima_breakpoints = realloc(mima_breakpoints, sizeof(mima_breakpoint) * breakpoints_capacity);
+        mima->mima_breakpoints = realloc(mima->mima_breakpoints, sizeof(mima_breakpoint) * breakpoints_capacity);
 
-        if (!mima_breakpoints)
+        if (!mima->mima_breakpoints)
         {
             log_error("Line %03zu: Could not realloc memory for breakpoints.", line);
         }
     }
 
-    mima_breakpoints[breakpoints_count].address = address;
-    mima_breakpoints[breakpoints_count].active = is_active;
+    mima->mima_breakpoints[breakpoints_count].address = address;
+    mima->mima_breakpoints[breakpoints_count].active = is_active;
 
     breakpoints_count++;
 }
