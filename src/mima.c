@@ -8,11 +8,12 @@
 #include "mima.h"
 #include "mima_compiler.h"
 #include "mima_shell.h"
+
 #include "mima_webasm_interface.h"
 
 mima_t mima_init()
 {
-    log_set_level(LOG_DEBUG);
+    log_set_level(LOG_TRACE);
 
     mima_t mima =
     {
@@ -85,6 +86,17 @@ mima_t mima_init()
     return mima;
 }
 
+void mima_set_run(mima_t* mima, mima_bool run)
+{
+    if (mima->control_unit.RUN == run)
+    {
+        return;
+    }
+
+    mima->control_unit.RUN = run;
+    mima_wasm_register_transfer(mima, RUN, IMMEDIATE, run);
+}
+
 void mima_run(mima_t *mima, mima_bool interactive)
 {
     log_info("\n\n==========================\nStarting Mima...\n==========================\n");
@@ -112,7 +124,7 @@ void mima_run_instruction_step(mima_t *mima){
 
 void mima_run_instruction_steps(mima_t *mima, char *arg)
 {
-    mima->control_unit.RUN = mima_true;
+    mima_set_run(mima, mima_true);
 
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
@@ -140,7 +152,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima->control_unit.RUN = mima_false;
+            mima_set_run(mima, mima_false);
             mima_shell(mima);
         }
     }
@@ -148,7 +160,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
 void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 {
-    mima->control_unit.RUN = mima_true;
+    mima_set_run(mima, mima_true);
 
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
@@ -162,7 +174,7 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima->control_unit.RUN = mima_false;
+            mima_set_run(mima, mima_false);
             mima_shell(mima);
         }
     }
@@ -219,29 +231,36 @@ void mima_micro_instruction_step(mima_t *mima)
     {
     case 1:
         mima->memory_unit.SAR   = mima->control_unit.IAR;
+        mima_wasm_register_transfer(mima, SAR, IAR, mima->control_unit.IAR);
         log_trace("Fetch - %02d: IAR -> SAR \t\t\t 0x%08x -> SAR \t\t I/O Read disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IAR);
         mima->processing_unit.X = mima->control_unit.IAR;
+        mima_wasm_register_transfer(mima, X, IAR, mima->control_unit.IAR);
         log_trace("Fetch - %02d: IAR -> X \t\t\t 0x%08x -> X \t", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IAR);
         break;
     case 2:
         mima->processing_unit.Y = mima->processing_unit.ONE;
+        mima_wasm_register_transfer(mima, Y, ONE, mima->processing_unit.ONE);
         log_trace("Fetch - %02d: ONE -> Y", mima->processing_unit.MICRO_CYCLE);
         mima->processing_unit.ALU = ADD;
         log_trace("Fetch - %02d: Set ALU to ADD \t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
         break;
     case 3:
         mima->processing_unit.Z = mima->processing_unit.X + mima->processing_unit.Y;
+        mima_wasm_register_transfer(mima, Z, X, mima->processing_unit.Z);
         log_trace("Fetch - %02d: X + Y -> Z \t\t\t 0x%08x + 0x%08x -> Z \t I/O waiting...", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
         break;
     case 4:
         mima->control_unit.IAR = mima->processing_unit.Z;
+        mima_wasm_register_transfer(mima, IAR, Z, mima->processing_unit.Z);
         log_trace("Fetch - %02d: Z -> IAR \t\t\t 0x%08x -> IAR", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         mima->current_instruction = mima_instruction_decode(mima);
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        mima_wasm_register_transfer(mima, SIR, SAR, mima->memory_unit.memory[mima->memory_unit.SAR]);
         log_trace("Fetch - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 5:
         mima->control_unit.IR = mima->memory_unit.SIR;
+        mima_wasm_register_transfer(mima, IR, SIR, mima->memory_unit.SIR);
         log_trace("Fetch - %02d: SIR -> IR \t\t\t 0x%08x -> IR", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
         break;
     default:
@@ -289,6 +308,7 @@ void mima_micro_instruction_step(mima_t *mima)
     }
     }
 
+    mima_wasm_register_transfer(mima, MICRO_CYCLE, SIR, mima->processing_unit.MICRO_CYCLE);
     mima->processing_unit.MICRO_CYCLE++;
     if (mima->processing_unit.MICRO_CYCLE > 12)
     {
@@ -303,10 +323,12 @@ void mima_instruction_common(mima_t *mima)
     {
     case 6:
         mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_wasm_register_transfer(mima, SAR, IR, mima->control_unit.IR & 0x0FFFFFFF);
         log_trace("%5s - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Read disposed", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        mima_wasm_register_transfer(mima, X, ACC, mima->processing_unit.ACC);
         log_trace("%5s - %02d: ACC -> X \t\t\t 0x%08x -> X \t\t I/O waiting...", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -314,12 +336,15 @@ void mima_instruction_common(mima_t *mima)
         break;
     case 9:
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+        mima_wasm_register_transfer(mima, SIR, MEMORY, mima->memory_unit.memory[mima->memory_unit.SAR]);
         log_trace("%5s - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 10:
         mima->processing_unit.Y = mima->memory_unit.SIR;
+        mima_wasm_register_transfer(mima, Y, SIR, mima->memory_unit.SIR);
         log_trace("%5s - %02d: SIR -> Y \t\t\t 0x%08x -> Y", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
         mima->processing_unit.ALU = mima->current_instruction.op_code;
+        mima_wasm_register_transfer(mima, ALU, IMMEDIATE, mima->current_instruction.op_code);
         log_trace("%5s - %02d: Set ALU to %s", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima_get_instruction_name(mima->current_instruction.op_code));
         break;
     case 11:
@@ -349,10 +374,14 @@ void mima_instruction_common(mima_t *mima)
         default:
             break;
         }
+
+        mima_wasm_register_transfer(mima, Z, ALU, mima->processing_unit.Z);
+
         break;
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        mima_wasm_register_transfer(mima, ACC, Z, mima->processing_unit.Z);
         log_trace("%5s - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         log_info("%5s - ACC = 0x%08x", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.ACC);
         break;
@@ -368,13 +397,14 @@ void mima_instruction_LDV(mima_t *mima)
     {
     case 6:
         mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_wasm_register_transfer(mima, SAR, IR, mima->control_unit.IR & 0x0FFFFFFF);
         log_trace("  LDV - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Read disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
-        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...");
+        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
         break;
     case 8:
-        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...");
+        log_trace("  LDV - %02d: empty \t\t\t\t\t\t\t I/O waiting...", mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
     {
@@ -384,12 +414,14 @@ void mima_instruction_LDV(mima_t *mima)
         {
             // internal memory
             mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
+            mima_wasm_register_transfer(mima, SIR, MEMORY, mima->memory_unit.memory[mima->memory_unit.SAR]);
             log_trace("  LDV - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         }
         else
         {
             mima->control_unit.TRA = mima_true;
-
+            mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_true);
+            
             // I/O space
             if (address == mima_char_input)
             {
@@ -397,8 +429,10 @@ void mima_instruction_LDV(mima_t *mima)
                 printf("Waiting for single char:");
                 char res = getchar();
                 mima->memory_unit.SIR = res;
+                mima_wasm_register_transfer(mima, SIR, IMMEDIATE, res);
                 log_trace("  LDV - %02d: Char -> SIR \t\t '%c' -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, res);
                 mima->control_unit.TRA = mima_false;
+                mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
             }
 
@@ -411,13 +445,15 @@ void mima_instruction_LDV(mima_t *mima)
                 fgets(number_string, 31, stdin);
                 int number = strtol(number_string, &endptr, 0);
                 mima->memory_unit.SIR = number;
+                mima_wasm_register_transfer(mima, SIR, IMMEDIATE, number);
                 log_trace("  LDV - %02d: Integer -> SIR \t\t %d aka 0x%08x -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, number, number);
                 mima->control_unit.TRA = mima_false;
+                mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
             }
 
             mima_bool taken = mima_false;
-            for (int i = 0; i < mima->ldv_callbacks_count; ++i)
+            for (size_t i = 0; i < mima->ldv_callbacks_count; ++i)
             {
                 if (mima->ldv_callbacks[i].address == address)
                 {
@@ -441,14 +477,15 @@ void mima_instruction_LDV(mima_t *mima)
     }
     case 10:
         mima->processing_unit.ACC = mima->memory_unit.SIR;
+        mima_wasm_register_transfer(mima, ACC, SIR, mima->memory_unit.SIR);
         log_trace("  LDV - %02d: SIR -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR);
         break;
     case 11:
-        log_trace("  LDV - %02d: empty");
+        log_trace("  LDV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 12:
-        log_trace("  LDV - %02d: empty");
-        log_info("  LDV - ACC = 0x%08x", mima_get_instruction_name(mima->current_instruction.op_code), mima->processing_unit.ACC);
+        log_trace("  LDV - %02d: empty", mima->processing_unit.MICRO_CYCLE);
+        log_info("  LDV - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
     default:
         log_warn("Invalid micro cycle. Must be between 6-12, was %d :(\n", mima->processing_unit.MICRO_CYCLE);
@@ -462,10 +499,12 @@ void mima_instruction_STV(mima_t *mima)
     {
     case 6:
         mima->memory_unit.SIR = mima->processing_unit.ACC;
+        mima_wasm_register_transfer(mima, SIR, ACC, mima->processing_unit.ACC);
         log_trace("  STV - %02d: ACC -> SIR \t\t\t 0x%08x -> SIR", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 7:
         mima->memory_unit.SAR = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_wasm_register_transfer(mima, SAR, IR, mima->memory_unit.SAR);
         log_trace("  STV - %02d: IR & 0x0FFFFFFF -> SAR \t 0x%08x -> SAR \t\t I/O Write disposed", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 8:
@@ -483,30 +522,41 @@ void mima_instruction_STV(mima_t *mima)
         if (address < 0xc000000)
         {
             mima->memory_unit.memory[address] = mima->memory_unit.SIR;
+            mima_wasm_register_transfer(mima, MEMORY, SIR, mima->memory_unit.SIR);
             log_trace("  STV - %02d: SIR -> mem[IR & 0x0FFFFFFF] \t 0x%08x -> mem[0x%08x] \t I/O Write done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SIR, address);
             break;
         }
         else
         {
             mima->control_unit.TRA = mima_true;
+            mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_true);
 
             // writing to IO -> ignoring the  first 4 bits
             if (address == mima_char_output)
             {
+                char cha[2];
+                cha[0] = (char)value;
+                cha[1] = 0;
+                mima_wasm_send_string(cha);
                 printf("%c\n", value);
                 mima->control_unit.TRA = mima_false;
+                mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
             }
 
             if (address == mima_integer_output)
             {
+                char num[32];
+                snprintf(num, 32, "%d\n", value);
+                mima_wasm_send_string(num);
                 printf("%d\n", value);
                 mima->control_unit.TRA = mima_false;
+                mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
             }
 
             mima_bool taken = mima_false;
-            for (int i = 0; i < mima->stv_callbacks_count; ++i)
+            for (size_t i = 0; i < mima->stv_callbacks_count; ++i)
             {
                 if (mima->stv_callbacks[i].address == address)
                 {
@@ -547,7 +597,8 @@ void mima_instruction_HLT(mima_t *mima)
 {
     log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
     log_info("  HLT - Stopping Mima");
-    mima->control_unit.RUN = mima_false;
+    mima_set_run(mima, mima_false);
+    mima_wasm_register_transfer(mima, RUN, IMMEDIATE, mima_false);
     mima->processing_unit.MICRO_CYCLE = 0;
 }
 
@@ -557,6 +608,7 @@ void mima_instruction_LDC(mima_t *mima)
     {
     case 6:
         mima->processing_unit.ACC = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_wasm_register_transfer(mima, ACC, IR, mima->processing_unit.ACC);
         log_trace("  LDC - %02d: IR & 0x0FFFFFFF -> ACC \t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x0FFFFFFF);
         break;
     case 7:
@@ -590,6 +642,7 @@ void mima_instruction_JMP(mima_t *mima)
     {
     case 6:
         mima->control_unit.IAR = mima->control_unit.IR & 0x0FFFFFFF;
+        mima_wasm_register_transfer(mima, IAR, IR, mima->control_unit.IAR);
         log_trace("  JMP - %02d: IR & 0x0FFFFFFF -> JMP \t", mima->processing_unit.MICRO_CYCLE);
         break;
     case 7:
@@ -625,6 +678,7 @@ void mima_instruction_JMN(mima_t *mima)
         if((int32_t)mima->processing_unit.ACC < 0)
         {
             mima->control_unit.IAR = mima->control_unit.IR & 0x0FFFFFFF;
+            mima_wasm_register_transfer(mima, IAR, IR, mima->control_unit.IAR);
             log_trace("  JMN - %02d: ACC = 0x%08x - Jumping to: 0x%08x", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC, mima->control_unit.IR & 0x0FFFFFFF);
         }
         else
@@ -633,22 +687,22 @@ void mima_instruction_JMN(mima_t *mima)
         }
         break;
     case 7:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 8:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 9:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 10:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
         break;
     case 12:
-        log_trace("  JMN - %02d: empty");
+        log_trace("  JMN - %02d: empty", mima->processing_unit.MICRO_CYCLE);
 
         if((int32_t)mima->processing_unit.ACC < 0)
         {
@@ -674,6 +728,7 @@ void mima_instruction_NOT(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
         log_trace("  NOT - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -684,14 +739,17 @@ void mima_instruction_NOT(mima_t *mima)
         break;
     case 10:
         mima->processing_unit.ALU = NOT;
+        mima_wasm_register_transfer(mima, ALU, IMMEDIATE, NOT);
         log_trace("  NOT - %02d: Set ALU to NOT", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
         mima->processing_unit.Z = ~mima->processing_unit.X;
+        mima_wasm_register_transfer(mima, Z, IMMEDIATE, ~mima->processing_unit.X);
         log_trace("  NOT - %02d: ~X -> Z \t\t\t ~0x%08x -> Z", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X);
         break;
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        mima_wasm_register_transfer(mima, ACC, Z, mima->processing_unit.Z);
         log_trace("  NOT - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         log_info("  NOT - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
@@ -710,6 +768,7 @@ void mima_instruction_RAR(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
         log_trace("  RAR - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -720,8 +779,10 @@ void mima_instruction_RAR(mima_t *mima)
         break;
     case 10:
         mima->processing_unit.Y = mima->processing_unit.ONE;
+        mima_wasm_register_transfer(mima, Y, ONE, 1);
         log_trace("  RAR - %02d: ONE -> Y", mima->processing_unit.MICRO_CYCLE);
         mima->processing_unit.ALU = RAR;
+        mima_wasm_register_transfer(mima, ALU, IMMEDIATE, RAR);
         log_trace("  RAR - %02d: Set ALU to RAR", mima->processing_unit.MICRO_CYCLE);
         break;
     case 11:
@@ -730,11 +791,13 @@ void mima_instruction_RAR(mima_t *mima)
         int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
+        mima_wasm_register_transfer(mima, Z, IMMEDIATE, combined);
         log_trace("  RAR - %02d: (X >>> 1) | (X << 31) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        mima_wasm_register_transfer(mima, ACC, Z, mima->processing_unit.Z);
         log_trace("  RAR - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         log_info("  RAR - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
@@ -753,6 +816,7 @@ void mima_instruction_RRN(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
+        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
         log_trace("  RRN - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -763,7 +827,9 @@ void mima_instruction_RRN(mima_t *mima)
         break;
     case 10:
         mima->processing_unit.Y = mima->control_unit.IR & 0x00FFFFFF;
+        mima_wasm_register_transfer(mima, Y, IR, mima->control_unit.IR & 0x00FFFFFF);
         log_trace("  RRN - %02d: IR & 0x00FFFFFF -> Y \t 0x%08x -> Y", mima->processing_unit.MICRO_CYCLE, mima->control_unit.IR & 0x00FFFFFF);
+        mima->processing_unit.ALU = RRN;
         mima->processing_unit.ALU = RRN;
         log_trace("  RRN - %02d: Set ALU to RRN", mima->processing_unit.MICRO_CYCLE);
         break;
@@ -773,11 +839,13 @@ void mima_instruction_RRN(mima_t *mima)
         int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
+        mima_wasm_register_transfer(mima, Z, IMMEDIATE, combined);
         log_trace("  RRN - %02d: (X >>> Y) | (X << (32-Y)) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }
     case 12:
         mima->processing_unit.ACC = mima->processing_unit.Z;
+        mima_wasm_register_transfer(mima, ACC, Z, mima->processing_unit.Z);
         log_trace("  RRN - %02d: Z -> ACC \t\t\t 0x%08x -> ACC", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         log_info("  RRN - ACC = 0x%08x", mima->processing_unit.ACC);
         break;
@@ -789,16 +857,16 @@ void mima_instruction_RRN(mima_t *mima)
 
 void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count)
 {
-    if (address < 0 || address > mima_words - 1)
+    if (/*address < 0 || is unsigned*/ address > mima_words - 1)
     {
         log_warn("Invalid address %d\n", address);
         return;
     }
 
-    for (int i = 0; address + i < mima_words - 1 && i < count; ++i)
+    for (size_t i = 0; address + i < mima_words - 1 && i < count; ++i)
     {
         mima_instruction instruction = mima_instruction_decode_mem(mima->memory_unit.memory[address + i]);
-        printf("mem[0x%08x] = 0x%08x = %s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
+        printf("mem[0x%08lx] = 0x%08x = %s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
     }
 }
 
@@ -889,7 +957,7 @@ void mima_delete(mima_t *mima)
 
 mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
 {
-    for (int i = 0; i < mima->ldv_callbacks_count; ++i)
+    for (size_t i = 0; i < mima->ldv_callbacks_count; ++i)
     {
         if(address == mima->ldv_callbacks[i].address)
         {
@@ -927,7 +995,7 @@ mima_bool mima_register_IO_LDV_callback(mima_t *mima, uint32_t address, mima_io_
 
 mima_bool mima_register_IO_STV_callback(mima_t *mima, uint32_t address, mima_io_callback_fun fun_ptr)
 {
-    for (int i = 0; i < mima->stv_callbacks_count; ++i)
+    for (size_t i = 0; i < mima->stv_callbacks_count; ++i)
     {
         if(address == mima->stv_callbacks[i].address)
         {
@@ -971,7 +1039,7 @@ mima_bool mima_hit_active_breakpoint(mima_t* mima)
         return mima_false;    
     }
 
-    for (int i = 0; i < breakpoints_count; ++i)
+    for (size_t i = 0; i < breakpoints_count; ++i)
     {
         if(mima->mima_breakpoints[i].address == mima->control_unit.IAR && mima->mima_breakpoints[i].active){
             log_info("Hit breakpoint at 0x%08x", mima->mima_breakpoints[i].address);

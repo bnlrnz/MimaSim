@@ -49,7 +49,7 @@ void mima_shell_set_breakpoint(mima_t* mima, char *arg)
     // if no address provided, print from breakpoints
     if(endptr == arg)
     {    
-        for (int i = 0; i < breakpoints_count; ++i)
+        for (size_t i = 0; i < breakpoints_count; ++i)
         {
             printf("Breakpoint at 0x%08x: %s\n", mima->mima_breakpoints[i].address, mima->mima_breakpoints[i].active ? "active" : "not active");
         }

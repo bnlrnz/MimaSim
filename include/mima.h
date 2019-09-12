@@ -107,6 +107,8 @@ void mima_run_micro_instruction_step(mima_t *mima);
 void mima_run_instruction_steps(mima_t *mima, char *steps);
 void mima_run_instruction_step(mima_t *mima);
 
+void mima_set_run(mima_t*, mima_bool run);
+
 void mima_micro_instruction_step(mima_t *mima);
 
 mima_instruction mima_instruction_decode(mima_t *mima);

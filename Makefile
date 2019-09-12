@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -c -Wall -O3 -Iinclude
+CFLAGS = -c -Wall -Wextra -O3 -Iinclude
 LD = $(CC)
 
 UNAME_S := $(shell uname -s)
@@ -25,6 +25,6 @@ debug: $(TARGET)
 
 .PHONY: web
 web: CC = emcc
-web: CFLAGS = -O3 -s ASYNCIFY -DWEBASM -s WASM=1 -Iinclude -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS='["_mima_init", "_mima_compile_s", "_mima_wasm_run", "_mima_delete", "_mima_run_micro_instruction_step", "_mima_run_instruction_step"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]'
+web: CFLAGS = -O3 -DWEBASM -s WASM=1 -Iinclude -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS='["_mima_init", "_mima_compile_s", "_mima_delete", "_mima_run_micro_instruction_step", "_mima_run_instruction_step"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]'
 web: 
 	$(CC) $(wildcard src/*.c) $(CFLAGS) -o web/MimaSim.js

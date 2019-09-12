@@ -2,12 +2,16 @@
 #include <emscripten.h>
 #endif
 #include <string.h>
+#include <stdlib.h>
 
 #include "mima.h"
 #include "mima_webasm_interface.h"
 
+#define UNUSED(x) (void)(x)
+
 void mima_wasm_send_string(const char *str)
 {
+    UNUSED(str);
 #ifdef WEBASM
     EM_ASM_(
     {
@@ -23,61 +27,30 @@ void mima_wasm_send_string(const char *str)
         message = message.replace("ERROR", "<font color=\"red\">ERROR</font>");
         message = message.replace("FATAL", "<font color=\"red\">FATAL</font>");
 
-        log.innerHTML += message + "<br>";
-        log.scrollTop = log.scrollHeight;
+        log.innerHTML = message + "<br>" + log.innerHTML;
+        log.scrollTop = 0;
     }, str, strlen(str));
 #endif
 }
 
-void mima_wasm_register_transfer(mima_t *mima, mima_register_type source, mima_register_type target, mima_word value)
+void mima_wasm_register_transfer(mima_t *mima, mima_register_type target, mima_register_type source, mima_word value)
 {
+    UNUSED(mima);
+    UNUSED(target);
+    UNUSED(source);
+    UNUSED(value);
 #ifdef WEBASM
     EM_ASM_(
     {
         //TODO trigger transfer function source -> target vis
-        switch($1)
-        {
-        case 1:
-            MimaModel.IR = $2;
-            break;
-        case 2:
-            MimaModel.IAR = $2;
-            break;
-        case 3:
-            MimaModel.TRA = $2;
-            break;
-        case 4:
-            MimaModel.RUN = $2;
-            break;
-        case 5:
-            MimaModel.SIR = $2;
-            break;
-        case 6:
-            MimaModel.SAR = $2;
-            break;
-        case 7:
-            MimaModel.ACC = $2;
-            break;
-        case 8:
-            MimaModel.X = $2;
-            break;
-        case 9:
-            MimaModel.Y = $2;
-            break;
-        case 10:
-            MimaModel.Z = $2;
-            break;
-        case 11:
-            MimaModel.ALU = $2;
-            break;
-        case 12:
-            MICRO_CYCLE = $1;
-            break;
-        }
+        updateMimaState($1, $2);
     }, source, target, value);
 #endif
 }
 
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void mima_wasm_run(mima_t *mima)
 {
     if (mima->current_instruction.op_code == HLT && mima->control_unit.IAR != 0)
@@ -102,4 +75,13 @@ void mima_wasm_run(mima_t *mima)
             //mima_shell(mima);
         }
     }
+}
+
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+void mima_wasm_free(void* ptr)
+{
+    if(ptr)
+        free(ptr);
 }

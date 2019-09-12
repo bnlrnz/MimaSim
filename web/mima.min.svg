@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<svg width="752" height="692" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g class="layer">
+  <title>Layer 1</title>
+  <g id="cell-CFDproqTHQgINwi0UDp_-49">
+   <path d="m751,314l0,-12.65q0,-10.35 -10.35,-10.35l-279.3,0q-10.35,0 -10.35,10.35l0,12.65" fill="#e1d5e7" id="svg_32" stroke="#9673a6" stroke-miterlimit="10" stroke-width="2"/>
+   <path d="m451,314l0,266.65q0,10.35 10.35,10.35l279.3,0q10.35,0 10.35,-10.35l0,-266.65" fill="none" id="svg_33" stroke="#9673a6" stroke-miterlimit="10" stroke-width="2"/>
+   <text font-family="Courier New" font-size="23" font-weight="bold" id="svg_34" text-anchor="middle" x="600" y="312.5">Memory Unit</text>
+  </g>
+  <path d="m630.5,381l0,10.5l-19,-15.5l19,-15.5l0,10.5l21,0l0,-10.5l19,15.5l-19,15.5l0,-10.5l-21,0z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-12" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-R10DWhb0ylvKd9kn0Sop-5" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="481" y="361"/>
+  <path d="m611.52,460.69l-0.04,-10l39.82,-0.2l-0.05,-10.5l19.07,15.41l-18.93,15.59l-0.05,-10.5l-39.82,0.2z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-13" stroke="#000" stroke-miterlimit="10"/>
+  <g id="cell-R10DWhb0ylvKd9kn0Sop-9">
+   <path d="m671,346l40,0l20,20l0,180l-40,0l-20,-20l0,-180z" fill="#e1d5e7" id="svg_35" stroke="#9673a6" stroke-miterlimit="10" stroke-width="2"/>
+   <path d="m671,346l40,0l20,20l-40,0l-20,-20z" fill-opacity="0.05" id="svg_36"/>
+   <path d="m671,346l20,20l0,180l-20,-20l0,-180z" fill-opacity="0.1" id="svg_37"/>
+   <path d="m691,546l0,-180l-20,-20m20,20l40,0" fill="none" id="svg_38" stroke="#9673a6" stroke-miterlimit="10" stroke-width="2"/>
+  </g>
+  <rect fill="#fff" height="30" id="cell-R10DWhb0ylvKd9kn0Sop-7" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="481" y="441"/>
+  <g id="cell-R10DWhb0ylvKd9kn0Sop-14" stroke="#000">
+   <path d="m574,410.5l-10.5,0l15.5,-19l15.5,19l-10.5,0l0,5.5l52,0l0,140l-52,0l0,55.5l10.5,0l-15.5,19l-15.5,-19l10.5,0l0,-65.5l52,0l0,-120l-52,0l0,-15.5z" fill="#fff" id="svg_39" stroke-miterlimit="1.42"/>
+   <path d="m574,410.5l-10.5,0l15.5,-19l15.5,19l-10.5,0m0,201l10.5,0l-15.5,19l-15.5,-19l10.5,0" fill="none" id="svg_40"/>
+  </g>
+  <g id="cell-CFDproqTHQgINwi0UDp_-36">
+   <path d="m301.5,24.5l0,-12.65q0,-10.35 -10.35,-10.35l-279.3,0q-10.35,0 -10.35,10.35l0,12.65" fill="#dae8fc" id="svg_41" stroke="#6c8ebf" stroke-miterlimit="10" stroke-width="2"/>
+   <path d="m1.5,24.5l0,556.65q0,10.35 10.35,10.35l279.3,0q10.35,0 10.35,-10.35l0,-556.65" fill="none" id="svg_42" stroke="#6c8ebf" stroke-miterlimit="10" stroke-width="2"/>
+   <text font-family="Courier New" font-size="23" font-weight="bold" id="svg_43" text-anchor="middle" x="150.5" y="23">Processing Unit</text>
+  </g>
+  <path d="m216.5,81l0,-10l115,0l0,-10.5l19,15.5l-19,15.5l0,-10.5l-115,0z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-23" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-4" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="86" y="61"/>
+  <path d="m235.5,161l0,10.5l-19,-15.5l19,-15.5l0,10.5l96,0l0,-10.5l19,15.5l-19,15.5l0,-10.5l-96,0z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-24" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-5" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="86" y="141"/>
+  <path d="m160.5,241l0,10.5l-19,-15.5l19,-15.5l0,10.5l190,0l0,10l-190,0z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-25" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m103.5,251.5l10,0l0,110l10.5,0l-15.5,19l-15.5,-19l10.5,0l0,-110z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-34" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-8" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="11" y="221"/>
+  <path d="m295.5,311l0,10.5l-19,-15.5l19,-15.5l0,10.5l55,0l0,10l-55,0z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-26" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m173.5,321.46l10,0.08l-0.34,40l10.5,0.09l-15.66,18.87l-15.34,-19.13l10.5,0.09l0.34,-40z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-35" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-10" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="146" y="291"/>
+  <path d="m206.5,546l0,-10l125,0l0,-10.5l19,15.5l-19,15.5l0,-10.5l-125,0z" fill="#fff" id="cell-CFDproqTHQgINwi0UDp_-33" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m146,506.5l10.5,0l-15.5,19l-15.5,-19l10.5,0l0,-35l10,0l0,35z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-25" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-21" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="76" y="526"/>
+  <g id="cell-CFDproqTHQgINwi0UDp_-37">
+   <path d="m751,24l0,-12.65q0,-10.35 -10.35,-10.35l-279.3,0q-10.35,0 -10.35,10.35l0,12.65" fill="#fff2cc" id="svg_53" stroke="#d6b656" stroke-miterlimit="10" stroke-width="2"/>
+   <path d="m451,24l0,236.65q0,10.35 10.35,10.35l279.3,0q10.35,0 10.35,-10.35l0,-236.65" fill="none" id="svg_54" stroke="#d6b656" stroke-miterlimit="10" stroke-width="2"/>
+   <text font-family="Courier New" font-size="23" font-weight="bold" id="svg_55" text-anchor="middle" x="600" y="22.5">Control Unit</text>
+  </g>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-38" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="481" y="68.5"/>
+  <rect fill="#fff" height="30" id="cell-CFDproqTHQgINwi0UDp_-40" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="481" y="148.5"/>
+  <g id="cell-CFDproqTHQgINwi0UDp_-42">
+   <rect fill="#fff" height="30" id="svg_56" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="130" x="481" y="213.5"/>
+   <switch>
+    <foreignObject height="26" id="svg_57" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" width="1"/>
+    <text font-family="Courier New" font-size="24" id="svg_58" text-anchor="middle" y="25">&lt;font style=&quot;font-size: 18px&quot;&gt;&lt;br&gt;&lt;/font&gt;</text>
+   </switch>
+  </g>
+  <path d="m461.49,158.53l-0.01,-10.5l19.02,15.47l-18.98,15.53l-0.01,-10.5l-31,0.04l0.01,10.5l-19.02,-15.48l18.98,-15.52l0.01,10.5l31,-0.04z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-3" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m461.5,223.5l0,-10.5l19,15.5l-19,15.5l0,-10.5l-31,0l0,10.5l-19,-15.5l19,-15.5l0,10.5l31,0z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-4" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m461.5,371l0,-10.5l19,15.5l-19,15.5l0,-10.5l-31,0l0,10.5l-19,-15.5l19,-15.5l0,10.5l31,0z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-10" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m461.5,451l0,-10.5l19,15.5l-19,15.5l0,-10.5l-31,0l0,10.5l-19,-15.5l19,-15.5l0,10.5l31,0z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-11" stroke="#000" stroke-miterlimit="10"/>
+  <path d="m508.5,471.51l10,-0.02l0.28,140l10.5,-0.02l-15.46,19.03l-15.54,-18.97l10.5,-0.02l-0.28,-140z" fill="#fff" id="cell-R10DWhb0ylvKd9kn0Sop-15" stroke="#000" stroke-miterlimit="10"/>
+  <rect fill="#fff" height="542" id="svg_70" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="null" width="60" x="351" y="36"/>
+  <text fill="#000000" font-family="Monospace" font-size="39" id="svg_72" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="rotate(-90 381.125 305.364) matrix(1 0 0 0.927806 60 -301.61)" x="321.120206" xml:space="preserve" y="667.358445">Bus</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_73" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 -45.0072 -219.856)" x="131.120206" xml:space="preserve" y="794.540194">Z</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_74" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 244.001 -385.029)" x="-220.879794" xml:space="preserve" y="642.568782">X</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_75" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 378.001 -313.032)" x="-220.879794" xml:space="preserve" y="642.568782">Y</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="x_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="74.120206" xml:space="preserve" y="243.125011">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="y_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="206.327714" xml:space="preserve" y="313.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="z_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="137.053337" xml:space="preserve" y="548.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="acc_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="147.785987" xml:space="preserve" y="162.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="one_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="147.785987" xml:space="preserve" y="83.195926">0x00000001</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="counter_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="534.161386" xml:space="preserve" y="90.195926">00</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="ir_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="533.185691" xml:space="preserve" y="171.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="iar_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="534.161386" xml:space="preserve" y="236.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="sir_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="533.185691" xml:space="preserve" y="383.195926">0x00000000</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="sar_text" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="532.209996" xml:space="preserve" y="463.953739">0x00000000</text>
+  <rect fill="#fff" height="250" id="svg_91" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="null" transform="rotate(90 546.118 657.618)" width="51.000001" x="520.617791" y="532.61779"/>
+  <text fill="#000000" font-family="Monospace" font-size="39" id="svg_92" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 53.9928 -261.856)" x="492.120206" xml:space="preserve" y="1005.791235">IO Bus</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_94" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 654.214 -242.31)" x="-544.879794" xml:space="preserve" y="405.450267">ACC</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_95" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-868.879794" xml:space="preserve" y="81.567931">ONE</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_96" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-444.879794" xml:space="preserve" y="89.112611">Counter</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_97" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-481.379794" xml:space="preserve" y="176.415337">IR</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_98" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-473.879794" xml:space="preserve" y="245.934175">IAR</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_99" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-473.879794" xml:space="preserve" y="404.372456">SIR</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_100" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 978.206 -22.3043)" x="-473.879794" xml:space="preserve" y="491.136276">SAR</text>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_101" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="rotate(-90 710.823 453.658) matrix(1 0 0 0.927806 1255.71 84.6957)" x="-544.879794" xml:space="preserve" y="405.450267">Memory</text>
+  <path d="m121,471l39,0l39,-90l-39,0l-19.5,38.57143l-19.5,-38.57143l-39,0" fill="#bfbfbf" id="svg_102" stroke="#4c4c4c" stroke-dasharray="null" stroke-linecap="round" stroke-linejoin="round" stroke-width="0"/>
+  <text fill="#000000" font-family="Monospace" font-size="24" id="svg_104" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1 0 0 0.927806 299.261 -127.55)" x="-158.879794" xml:space="preserve" y="619.934742">ALU</text>
+  <rect fill="#aaffaa" height="30" id="run_label" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="76.999999" x="646" y="114"/>
+  <rect fill="#ffaaaa" height="30" id="tra_label" rx="4.5" ry="4.5" stroke="#000" stroke-width="2" width="76.999999" x="646" y="164"/>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="svg_47" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="667" xml:space="preserve" y="135.696536">RUN</text>
+  <text fill="#000000" font-family="Monospace" font-size="20" id="svg_48" stroke="#000" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="0" text-anchor="middle" transform="matrix(1.02491 0 0 1 -0.346439 0)" x="667" xml:space="preserve" y="184.697147">TRA</text>
+ </g>
+</svg>

@@ -115,7 +115,7 @@ mima_bool mima_string_to_op_code(const char *op_code_string, uint32_t *op_code)
         op_code_result = RRN;
     }
 
-    if (op_code_result == -1)
+    if ((int)op_code_result == -1)
     {
         return mima_false;
     }
@@ -418,7 +418,7 @@ void mima_push_label(mima_t* mima, const char *label_name, uint32_t address, siz
 
 uint32_t mima_address_for_label(mima_t* mima, const char *label_name, size_t line)
 {
-    for (int i = 0; i < labels_count; ++i)
+    for (size_t i = 0; i < labels_count; ++i)
     {
         log_trace("Line %03zu: Searching for Label %s == %s", line, label_name, mima->mima_labels[i].label_name);
 
@@ -434,7 +434,7 @@ uint32_t mima_address_for_label(mima_t* mima, const char *label_name, size_t lin
 
 mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code, uint32_t value, size_t line)
 {
-    if (op_code < 0 || op_code > 0xFF)
+    if (/*op_code < 0 || is unsigned*/ op_code > 0xFF)
     {
         log_error("Line %03zu: Invalid op code %d", line, op_code);
         return mima_false;
@@ -447,7 +447,7 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
         return mima_true;
     }
 
-    if (value < 0 || value > 0x0FFFFFFF)
+    if (/*value < 0 || also unsigned*/ value > 0x0FFFFFFF)
     {
         log_error("Line %03zu: Invalid value %d", line, op_code);
         return mima_false;
@@ -460,7 +460,7 @@ mima_bool mima_assemble_instruction(mima_register *instruction, uint32_t op_code
 void mima_push_breakpoint(mima_t* mima, uint32_t address, mima_bool is_active, size_t line){
     
     // if breakpoint exists -> toggle
-    for (int i = 0; i < breakpoints_count; ++i)
+    for (size_t i = 0; i < breakpoints_count; ++i)
     {
         if(mima->mima_breakpoints[i].address == address)
         {

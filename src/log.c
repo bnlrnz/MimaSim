@@ -28,6 +28,7 @@
 
 #include "log.h"
 #include "mima.h"
+
 #include "mima_webasm_interface.h"
 
 static struct {
