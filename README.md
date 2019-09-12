@@ -22,6 +22,16 @@ $make
 $./MimaSim fibonacci.asm
 ```
 
+### Build for Web
+
+You need emscripten (https://emscripten.org/docs/getting_started/downloads.html) to build for web/webasm.
+
+```bash
+$make web
+```
+
+Access index.html under web/.
+
 ## Mima Shell
 
 While running the mima interactively (**mima_run()**'s second parameter must be **mima_true** to access mima shell), one can type the following commands:
