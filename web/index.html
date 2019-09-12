@@ -2,28 +2,29 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
-  <!-- 
-    numbering the textarea
-  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mima</title>
 
+  <!-- numbering the textarea -->
   <style type="text/css">
-        #editor{
-          border:2px solid gray;position:relative;
-          height:720px;width:400px
-        }
-        #log_text{
-          border:0px solid gray;position:relative;
-          height:720px;width:600px
-        }
+    #editor{
+      border:2px solid gray;position:relative;
+      height:720px;width:400px
+    }
+    #log_text{
+      border:0px solid gray;position:relative;
+      height:720px;width:600px
+    }
   </style>
+
   <link rel="stylesheet" type="text/css" href="./tln.css" />
   <script type="text/javascript" src="./tln.js"></script>
-  <title></title>
 </head>
 <body>
   <div class="flex-container">
     <div id="editor">
-      <textarea id="source_code">0xFF0 1     // F0
+      <textarea id="source_code">
+0xFF0 1     // F0
 0xFF1 1     // F1
 0xFF2 0     // Fn
 0xFF3 1     // 1
@@ -49,154 +50,163 @@ STV 0xFFC
 EQL 0xFFD
 NOT
 JMN LOOP
-HLT</textarea>
+HLT
+    </textarea>
     </div>
     <div class="flex-container-v" style="margin: 8px">
-      <input class="button" type="button" id="btn_compile" value="Compile" />
       <div class="flex-container-v">
-        <input class="button" type="button" id="btn_run" value="Run" /> <input class="button" type="button" id="btn_step" value="Step" /> <input class="button" type="button" id="btn_mstep" value="Micro Step" />
+        <input class="button" type="button" id="btn_compile" value="Compile" />
+      </div>
+      <div class="flex-container-v">
+        <input class="button" type="button" id="btn_run" value="Run" />
+        <input class="button" type="button" id="btn_step" value="Step" />
+        <input class="button" type="button" id="btn_mstep" value="Micro Step" />
       </div>
     </div>
-<div>
- <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml"></object>
+    <div>
+     <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml"></object>
+   </div>
+ </div>
+ <div style="height:600px;width:600px">
+  <div id="log_text" style="overflow: auto;" readonly="readonly"></div>
 </div>
-  </div>
-    <div style="height:600px;width:600px">
-      <div id="log_text" style="overflow: auto;" readonly="readonly"></div>
-    </div>
-  <script src="MimaSim.js"></script>
-  <script type="text/javascript">
-    TLN.append_line_numbers('source_code');
+<script src="MimaSim.js"></script>
+<script type="text/javascript">
+  TLN.append_line_numbers('source_code');
 
-    var MimaModel = {
-      IR: 0,
-      IAR: 0,
-      TRA: 0,
-      RUN: 1,
-      SIR: 0,
-      SAR: 0,
-      ACC: 0,
-      X: 0,
-      Y: 0,
-      Z: 0,
-      ALU: 0,
-      MICRO_CYCLE: 1,
-      ONE: 1,
+  var MimaModel = {
+    IR: 0,
+    IAR: 0,
+    TRA: 0,
+    RUN: 1,
+    SIR: 0,
+    SAR: 0,
+    ACC: 0,
+    X: 0,
+    Y: 0,
+    Z: 0,
+    ALU: 0,
+    MICRO_CYCLE: 1,
+    ONE: 1,
+  };
+
+  Module.onRuntimeInitialized = async _ => {
+    var mima_instance = _mima_init();
+
+    document.getElementById('btn_compile').onclick = async function(){
+      var value = document.getElementById('source_code').value;
+      var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
+      var res  = _mima_compile_s(mima_instance, ptr);
+      _mima_wasm_free(ptr);
     };
 
-    Module.onRuntimeInitialized = async _ => {
-      var mima_instance = _mima_init();
+    document.getElementById('btn_step').onclick = async function(){
+      _mima_run_instruction_step(mima_instance);
+    };
 
-      document.getElementById('btn_compile').onclick = async function(){
-        var value = document.getElementById('source_code').value;
-        var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
-        var res  = _mima_compile_s(mima_instance, ptr);
-        _mima_wasm_free(ptr);
-      };
+    document.getElementById('btn_mstep').onclick = async function(){
+      _mima_run_micro_instruction_step(mima_instance);
+    };
 
-      document.getElementById('btn_step').onclick = async function(){
-        _mima_run_instruction_step(mima_instance);
-      };
+    document.getElementById('btn_run').onclick = function(){
+      var id = setInterval(runLoop, 100);
+      function runLoop(){
+        if(MimaModel.RUN == false){
+          clearInterval(id);
+          return;
+        }
 
-      document.getElementById('btn_mstep').onclick = async function(){
         _mima_run_micro_instruction_step(mima_instance);
-      };
-
-      document.getElementById('btn_run').onclick = function(){
-        var id = setInterval(runLoop, 100);
-        function runLoop(){
-          if(MimaModel.RUN == false){
-            clearInterval(id);
-            return;
-          }
-
-          _mima_run_micro_instruction_step(mima_instance);
-        }
-      };
-
-      window.onbeforeunload = function(e) {
-        _mima_delete(mima_instance);
-      };
+      }
     };
 
-    function getHexString(value){
-      return "0x" + ("00000000" + value.toString(16)).substr(-8);
-    }
-
-    function getOpCodeName(opCode){
-      switch(opCode){
-          case 0: return "ADD";
-          case 1: return "AND";
-          case 2: return "OR";
-          case 3: return "XOR";
-          case 4: return "LDV";
-          case 5: return "STV";
-          case 6: return "LDC";
-          case 7: return "JMP";
-          case 8: return "JMN";
-          case 9: return "EQL";
-          case 0xF0: return "HLT";
-          case 0xF1: return "NOT";
-          case 0xF2: return "RAR";
-          case 0xF3: return "RRN";
-        }
-    }
-
-    function updateMimaState(target, value){
-        var svg = document.getElementById('mimaimg').contentDocument;
-
-        switch(target)
-        {
-        case 1:
-            MimaModel.IR = value;
-            svg.getElementById('ir_text').innerHTML = getHexString(value);
-            break;
-        case 2:
-            MimaModel.IAR = value;
-            svg.getElementById('iar_text').innerHTML = getHexString(value);
-            break;
-        case 3:
-            MimaModel.TRA = value;
-            svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
-            break;
-        case 4:
-            MimaModel.RUN = value;
-            svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
-            break;
-        case 5:
-            MimaModel.SIR = value;
-            svg.getElementById('sir_text').innerHTML = getHexString(value);
-            break;
-        case 6:
-            MimaModel.SAR = value;
-            svg.getElementById('sar_text').innerHTML = getHexString(value);
-            break;
-        case 7:
-            MimaModel.ACC = value;
-            svg.getElementById('acc_text').innerHTML = getHexString(value);
-            break;
-        case 8:
-            MimaModel.X = value;
-            svg.getElementById('x_text').innerHTML = getHexString(value);
-            break;
-        case 9:
-            MimaModel.Y = value;
-            svg.getElementById('y_text').innerHTML = getHexString(value);
-            break;
-        case 10:
-            MimaModel.Z = value;
-            svg.getElementById('z_text').innerHTML = getHexString(value);
-            break;
-        case 11:
-            MimaModel.ALU = value;
-            svg.getElementById('svg_104').innerHTML = getOpCodeName(value);
-            break;
-        case 12:
-            MimaModel.MICRO_CYCLE = value;
-            svg.getElementById('counter_text').innerHTML = value;
-            break;
-        }
+    window.onbeforeunload = function(e) {
+      _mima_delete(mima_instance);
     };
-  </script>
+  };
+
+  function getHexString(value){
+    if (value < 0)
+    {
+      value = 0xFFFFFFFF + value + 1;
+    }
+    return "0x" + ("00000000" + value.toString(16).toUpperCase()).substr(-8);
+  }
+
+  function getOpCodeName(opCode){
+    switch(opCode){
+      case 0: return "ADD";
+      case 1: return "AND";
+      case 2: return "OR";
+      case 3: return "XOR";
+      case 4: return "LDV";
+      case 5: return "STV";
+      case 6: return "LDC";
+      case 7: return "JMP";
+      case 8: return "JMN";
+      case 9: return "EQL";
+      case 0xF0: return "HLT";
+      case 0xF1: return "NOT";
+      case 0xF2: return "RAR";
+      case 0xF3: return "RRN";
+    }
+  }
+
+  function updateMimaState(target, value){
+    var svg = document.getElementById('mimaimg').contentDocument;
+
+    switch(target)
+    {
+      case 1:
+      MimaModel.IR = value;
+      svg.getElementById('ir_text').innerHTML = getHexString(value);
+      break;
+      case 2:
+      MimaModel.IAR = value;
+      svg.getElementById('iar_text').innerHTML = getHexString(value);
+      break;
+      case 3:
+      MimaModel.TRA = value;
+      svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+      break;
+      case 4:
+      MimaModel.RUN = value;
+      svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+      break;
+      case 5:
+      MimaModel.SIR = value;
+      svg.getElementById('sir_text').innerHTML = getHexString(value);
+      break;
+      case 6:
+      MimaModel.SAR = value;
+      svg.getElementById('sar_text').innerHTML = getHexString(value);
+      break;
+      case 7:
+      MimaModel.ACC = value;
+      svg.getElementById('acc_text').innerHTML = getHexString(value);
+      break;
+      case 8:
+      MimaModel.X = value;
+      svg.getElementById('x_text').innerHTML = getHexString(value);
+      break;
+      case 9:
+      MimaModel.Y = value;
+      svg.getElementById('y_text').innerHTML = getHexString(value);
+      break;
+      case 10:
+      MimaModel.Z = value;
+      svg.getElementById('z_text').innerHTML = getHexString(value);
+      break;
+      case 11:
+      MimaModel.ALU = value;
+      svg.getElementById('svg_104').innerHTML = getOpCodeName(value);
+      break;
+      case 12:
+      MimaModel.MICRO_CYCLE = value;
+      svg.getElementById('counter_text').innerHTML = value;
+      break;
+    }
+  };
+</script>
 </body>
 </html>
