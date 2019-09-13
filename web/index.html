@@ -139,7 +139,7 @@ HLT
     document.getElementById('btn_run').disabled = true;
     document.getElementById('btn_reset').disabled = true;
 
-    document.getElementById('btn_compile').onclick = async function(){
+    document.getElementById('btn_compile').onclick = async function() {
       memoryLineMap.clear();
 
       var value = document.getElementById('source_code').value;
@@ -163,19 +163,19 @@ HLT
       _mima_wasm_free(ptr);
     };
 
-    document.getElementById('btn_step').onclick = async function(){
-      _mima_wasm_set_run(mima_instance, true);
+    document.getElementById('btn_step').onclick = async function() {
       _mima_run_instruction_step(mima_instance);
       _mima_wasm_set_run(mima_instance, false);
     };
 
-    document.getElementById('btn_mstep').onclick = async function(){
-      _mima_wasm_set_run(mima_instance, true);
-      _mima_run_micro_instruction_step(mima_instance);
-      _mima_wasm_set_run(mima_instance, false);
+    document.getElementById('btn_step').onclick = async function() {
+      _mima_run_instruction_step(mima_instance);
     };
 
-    document.getElementById('btn_run').onclick = async function(){
+    document.getElementById('btn_run').onclick = async function() {
+
+      var id;
+
       if (running)
       {
         running = false;
@@ -376,11 +376,11 @@ function updateMimaState(target, value){
     break;
     case 3:
     MimaModel.TRA = value;
-    svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+    svg.getElementById('tra_label').setAttribute("class", value ? "active" : "inactive");
     break;
     case 4:
     MimaModel.RUN = value;
-    svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+    svg.getElementById('run_label').setAttribute("class", value ? "active" : "inactive");
     break;
     case 5:
     MimaModel.SIR = value;
