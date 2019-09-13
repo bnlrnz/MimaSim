@@ -33,6 +33,18 @@
   cursor: not-allowed;
 }
 
+#log_text p{
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+}
+
+#output_text p{
+  margin: 0;
+  margin-left: 8px;
+  font-size: 2em;
+  font-family: "Courier New", Courier, monospace;
+}
+
 .flex-container-v{
     display: flex;
     flex-direction: column; 

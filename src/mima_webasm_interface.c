@@ -28,7 +28,7 @@ void mima_wasm_to_log(const char *str)
         message = message.replace("ERROR", "<font color=\"red\">ERROR</font>");
         message = message.replace("FATAL", "<font color=\"red\">FATAL</font>");
 
-        log.innerHTML = message + "<br>" + log.innerHTML;
+        log.innerHTML = "<p>" + message + "</p>" + log.innerHTML;
         log.scrollTop = 0;
     }, str, strlen(str));
 #endif
@@ -44,7 +44,7 @@ void mima_wasm_to_output(const char* str)
         var len = $1;
         var message = UTF8ToString(ptr, $1);
         var output = document.getElementById('output_text');
-        output.innerHTML = "\t" + message + "<br>" + output.innerHTML;
+        output.innerHTML = "<p>" + message + "</p>" + output.innerHTML;
         output.scrollTop = 0;
     }, str, strlen(str));
 #endif
