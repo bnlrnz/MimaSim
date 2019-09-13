@@ -50,8 +50,7 @@ STV 0xFFC
 EQL 0xFFD
 NOT
 JMN LOOP
-HLT
-</textarea>
+HLT</textarea>
     </div>
     <div class="flex-container-v" style="margin: 8px">
       <div class="flex-container-v">
@@ -97,7 +96,7 @@ HLT
   Module.onRuntimeInitialized = async _ => {
     var mima_instance = _mima_init();
 
-    document.getElementById('btn_compile').onclick = async function(){
+    document.getElementById('btn_compile').onclick = async function() {
       memoryLineMap.clear();
       var value = document.getElementById('source_code').value;
       var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
@@ -116,15 +115,15 @@ HLT
       _mima_wasm_free(ptr);
     };
 
-    document.getElementById('btn_step').onclick = async function(){
+    document.getElementById('btn_step').onclick = async function() {
       _mima_run_instruction_step(mima_instance);
     };
 
-    document.getElementById('btn_step').onclick = async function(){
+    document.getElementById('btn_step').onclick = async function() {
       _mima_run_instruction_step(mima_instance);
     };
 
-    document.getElementById('btn_run').onclick = async function(){
+    document.getElementById('btn_run').onclick = async function() {
 
       var id;
 
@@ -151,7 +150,7 @@ HLT
       }
     };
 
-    document.getElementById('source_code').onchange = function(){
+    document.getElementById('source_code').onchange = function() {
       var line = document.getElementById('compile_error');
       if (line)
       {
@@ -167,7 +166,7 @@ HLT
     };
   }
 
-  function getHexString(value){
+  function getHexString(value) {
     if (value < 0)
     {
       value = 0xFFFFFFFF + value + 1;
@@ -175,7 +174,7 @@ HLT
     return "0x" + ("00000000" + value.toString(16).toUpperCase()).substr(-8);
   }
 
-  function getOpCodeName(opCode){
+  function getOpCodeName(opCode) {
     switch(opCode){
       case 0: return "ADD";
       case 1: return "AND";
@@ -194,7 +193,7 @@ HLT
     }
   }
 
-  function updateMimaState(target, value){
+  function updateMimaState(target, value) {
     var svg = document.getElementById('mimaimg').contentDocument;
 
     switch(target)
@@ -209,11 +208,11 @@ HLT
       break;
       case 3:
       MimaModel.TRA = value;
-      svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+      svg.getElementById('tra_label').setAttribute("class", value ? "active" : "inactive");
       break;
       case 4:
       MimaModel.RUN = value;
-      svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+      svg.getElementById('run_label').setAttribute("class", value ? "active" : "inactive");
       break;
       case 5:
       MimaModel.SIR = value;

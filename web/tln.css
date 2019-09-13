@@ -33,6 +33,18 @@
   cursor: not-allowed;
 }
 
+rect.active {
+  fill: #aaffaa;
+  /*color: #aaffaa;*/
+  background-color: #aaffaa;
+}
+
+rect.inactive {
+  fill: #ffaaaa;
+  /*color: #ffaaaa;*/
+  background-color: #ffaaaa;
+}
+
 .flex-container-v{
     display: flex;
     flex-direction: column; 
