@@ -376,11 +376,11 @@ function updateMimaState(target, value){
     break;
     case 3:
     MimaModel.TRA = value;
-    svg.getElementById('tra_label').setAttribute("class", value ? "#active" : "#inactive");
+    svg.getElementById('tra_label').setAttribute("class", value ? "active" : "inactive");
     break;
     case 4:
     MimaModel.RUN = value;
-    svg.getElementById('run_label').setAttribute("class", value ? "#active" : "#inactive");
+    svg.getElementById('run_label').setAttribute("class", value ? "active" : "inactive");
     break;
     case 5:
     MimaModel.SIR = value;
