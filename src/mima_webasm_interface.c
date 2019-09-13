@@ -33,6 +33,63 @@ void mima_wasm_send_string(const char *str)
 #endif
 }
 
+char mima_wasm_input_single_char()
+{
+#ifdef WEBASM
+    return EM_ASM_(
+    {
+        return prompt("Input single char: ", "");
+    });
+#endif
+    return 0;
+}
+
+int mima_wasm_input_single_int()
+{
+#ifdef WEBASM
+   return EM_ASM_(
+    {
+       return prompt("Input single number, pls: ", "");
+    });
+#endif
+   return 0;
+}
+
+void mima_wasm_push_memory_line_correspondence(size_t line_number, mima_word address)
+{
+    UNUSED(line_number);
+    UNUSED(address);
+#ifdef WEBASM
+    EM_ASM_(
+    {
+        lineMemoryMap.set($1, $0);
+    }, line_number, address);
+#endif
+}
+
+void mima_wasm_mark_current_line(size_t line_number)
+{
+    UNUSED(line_number);
+#ifdef WEBASM
+    EM_ASM_(
+    {
+
+    }, line_number);
+#endif
+}
+
+void mima_wasm_mark_error_line(size_t line_number)
+{
+    UNUSED(line_number);
+#ifdef WEBASM
+    EM_ASM_(
+    {
+        document.querySelector('.tln-wrapper :nth-child('+$0+')').setAttribute('style', 'background:#ffaaaa;');
+        document.querySelector('.tln-wrapper :nth-child('+$0+')').setAttribute('id', 'compile_error');
+    }, line_number);
+#endif
+}
+
 void mima_wasm_register_transfer(mima_t *mima, mima_register_type target, mima_register_type source, mima_word value)
 {
     UNUSED(mima);
@@ -51,30 +108,9 @@ void mima_wasm_register_transfer(mima_t *mima, mima_register_type target, mima_r
 #ifdef WEBASM
 EMSCRIPTEN_KEEPALIVE
 #endif
-void mima_wasm_run(mima_t *mima)
+void mima_wasm_set_run(mima_t *mima, mima_bool run)
 {
-    if (mima->current_instruction.op_code == HLT && mima->control_unit.IAR != 0)
-    {
-        mima_wasm_send_string("Last instruction was HLT and IAR != 0. Are you shure you want to run the mima? -> y|N\n\nThis could result in a lot of ADD instructions if you just executed a mima program\nand the IAR points to the end of your defined memory.\nYou can set the IAR (e.g. to zero) with the 'i' command.\n\nBeware: the first run of your program could have modified the mima state or memory.\nThis could result in an endless loop.\n");
-        char res = getchar();
-        if (res != 'y')
-        {
-            return;
-        }
-    }
-
-    mima->control_unit.RUN = mima_true;
-
-    while(mima->control_unit.RUN && mima->control_unit.TRA == mima_false)
-    {
-        mima_micro_instruction_step(mima);
-
-        if(mima_hit_active_breakpoint(mima))
-        {
-            mima->control_unit.RUN = mima_false;
-            //mima_shell(mima);
-        }
-    }
+    mima_set_run(mima, run, "mima_wasm_set_run");
 }
 
 #ifdef WEBASM

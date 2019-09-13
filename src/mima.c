@@ -13,7 +13,7 @@
 
 mima_t mima_init()
 {
-    log_set_level(LOG_TRACE);
+    log_set_level(LOG_DEBUG);
 
     mima_t mima =
     {
@@ -86,8 +86,9 @@ mima_t mima_init()
     return mima;
 }
 
-void mima_set_run(mima_t* mima, mima_bool run)
+void mima_set_run(mima_t* mima, mima_bool run, const char* function)
 {
+    log_debug("%s is setting RUN to %s", function, run ? "true" : "false");
     if (mima->control_unit.RUN == run)
     {
         return;
@@ -99,6 +100,8 @@ void mima_set_run(mima_t* mima, mima_bool run)
 
 void mima_run(mima_t *mima, mima_bool interactive)
 {
+    mima_set_run(mima, mima_true, "mima_run");
+
     log_info("\n\n==========================\nStarting Mima...\n==========================\n");
     if (interactive)
     {
@@ -124,7 +127,7 @@ void mima_run_instruction_step(mima_t *mima){
 
 void mima_run_instruction_steps(mima_t *mima, char *arg)
 {
-    mima_set_run(mima, mima_true);
+    mima_set_run(mima, mima_true, "mima_run_instruction_steps");
 
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
@@ -152,7 +155,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima_set_run(mima, mima_false);
+            mima_set_run(mima, mima_false, "mima_run_instruction_steps brkpnt");
             mima_shell(mima);
         }
     }
@@ -160,7 +163,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
 void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 {
-    mima_set_run(mima, mima_true);
+    //mima_set_run(mima, mima_true, "mima_run_micro_instruction_steps");
 
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
@@ -174,7 +177,7 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima_set_run(mima, mima_false);
+            mima_set_run(mima, mima_false, "mima_run_micro_instruction_steps brkpnt");
             mima_shell(mima);
         }
     }
@@ -442,8 +445,16 @@ void mima_instruction_LDV(mima_t *mima)
                 printf("Waiting for number (dec or hex [with 0x-prefix]):");
                 char number_string[32] = {0};
                 char *endptr;
-                fgets(number_string, 31, stdin);
-                int number = strtol(number_string, &endptr, 0);
+
+                int number = 0;
+
+                #ifdef WEBASM
+                    number =  mima_wasm_input_single_int();
+                #else
+                    fgets(number_string, 31, stdin);
+                    number = strtol(number_string, &endptr, 0);
+                #endif
+                
                 mima->memory_unit.SIR = number;
                 mima_wasm_register_transfer(mima, SIR, IMMEDIATE, number);
                 log_trace("  LDV - %02d: Integer -> SIR \t\t %d aka 0x%08x -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, number, number);
@@ -597,7 +608,7 @@ void mima_instruction_HLT(mima_t *mima)
 {
     log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
     log_info("  HLT - Stopping Mima");
-    mima_set_run(mima, mima_false);
+    mima_set_run(mima, mima_false, "mima_instruction_HLT");
     mima_wasm_register_transfer(mima, RUN, IMMEDIATE, mima_false);
     mima->processing_unit.MICRO_CYCLE = 0;
 }

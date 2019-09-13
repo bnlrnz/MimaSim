@@ -247,6 +247,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
             if (!mima_assemble_instruction(&instruction, op_code, value, *line_number))
             {
                 log_error("Line %03zu: Could not assemble instruction: %s", *line_number, line);
+                mima_wasm_mark_error_line(*line_number);
                 (*error)++;
                 return;
             }
@@ -272,6 +273,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
             if (!mima_string_to_number(string2, &value))
             {
                 log_error("Found address at line %d - value should follow, but did not.", *line_number);
+                mima_wasm_mark_error_line(*line_number);
                 (*error)++;
             }
 
@@ -298,6 +300,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
         }
 
         log_error("Line %03zu: Error/Unknown command - \"%s\"", *line_number, line);
+        mima_wasm_mark_error_line(*line_number);
         (*error)++;
 }
 

@@ -5,7 +5,8 @@ LD = $(CC)
 UNAME_S := $(shell uname -s)
 
 TARGET = MimaSim
-OBJECTS = $(patsubst %.c, %.o, $(wildcard src/*.c))
+SOURCE_FILES = $(wildcard src/*.c)
+OBJECTS = $(patsubst %.c, %.o, $(SOURCE_FILES))
 
 all: $(TARGET)
 
@@ -25,6 +26,6 @@ debug: $(TARGET)
 
 .PHONY: web
 web: CC = emcc
-web: CFLAGS = -O3 -DWEBASM -s WASM=1 -Iinclude -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS='["_mima_init", "_mima_compile_s", "_mima_delete", "_mima_run_micro_instruction_step", "_mima_run_instruction_step"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]'
+web: CFLAGS = -O3 -s ASYNCIFY -DWEBASM -s WASM=1 -Iinclude -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS='["_mima_init", "_mima_compile_s", "_mima_delete", "_mima_run_micro_instruction_step", "_mima_run_instruction_step"]'
 web: 
-	$(CC) $(wildcard src/*.c) $(CFLAGS) -o web/MimaSim.js
+	$(CC) $(filter-out src/main.c, $(wildcard src/*.c)) $(CFLAGS) -o web/MimaSim.js

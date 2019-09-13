@@ -17,9 +17,20 @@
   transition-duration: 0.2s;
 }
 
+.button:disabled {
+  background-color: #AAAAAA;
+  color: black;
+}
+
 .button:hover {
   background-color: transparent; /* Green */
   color: black;
+}
+
+.button:disabled:hover {
+  background-color: #AAAAAA;
+  color: black;
+  cursor: not-allowed;
 }
 
 .flex-container-v{

@@ -54,7 +54,7 @@ HLT</textarea>
     <div class="flex-container-v" style="margin: 8px">
       <input class="button" type="button" id="btn_compile" value="Compile" />
       <div class="flex-container-v">
-        <input class="button" type="button" id="btn_run" value="Run" /> <input class="button" type="button" id="btn_step" value="Step" /> <input class="button" type="button" id="btn_mstep" value="Micro Step" />
+        <input class="button" type="button" id="btn_run" value="Run" disabled/> <input class="button" type="button" id="btn_step" value="Step" disabled/> <input class="button" type="button" id="btn_mstep" value="Micro Step" disabled/>
       </div>
     </div>
 <div>
@@ -84,13 +84,29 @@ HLT</textarea>
       ONE: 1,
     };
 
+    var memoryLineMap = new Map();
+
+    var running = false;
+
     Module.onRuntimeInitialized = async _ => {
       var mima_instance = _mima_init();
 
       document.getElementById('btn_compile').onclick = async function(){
+        memoryLineMap.clear();
         var value = document.getElementById('source_code').value;
         var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
         var res  = _mima_compile_s(mima_instance, ptr);
+
+        if (res) {
+          document.getElementById('btn_step').disabled = false;
+          document.getElementById('btn_mstep').disabled = false;
+          document.getElementById('btn_run').disabled = false;
+        }else{
+          document.getElementById('btn_step').disabled = true;
+          document.getElementById('btn_mstep').disabled = true;
+          document.getElementById('btn_run').disabled = true;
+        }
+
         _mima_wasm_free(ptr);
       };
 
@@ -102,15 +118,43 @@ HLT</textarea>
         _mima_run_micro_instruction_step(mima_instance);
       };
 
-      document.getElementById('btn_run').onclick = function(){
-        var id = setInterval(runLoop, 100);
-        function runLoop(){
-          if(MimaModel.RUN == false){
-            clearInterval(id);
-            return;
+      document.getElementById('btn_run').onclick = async function(){
+
+        var id;
+
+        if (running)
+        {
+          running = false;
+
+          if(id) clearInterval(id);
+          _mima_wasm_set_run(mima_instance, false);
+          document.getElementById('btn_run').value = "Run";
+        }
+        else
+        {
+          running = true;
+
+          _mima_wasm_set_run(mima_instance, true);
+
+          id = setInterval(runLoop, 100);
+          function runLoop(){
+            _mima_run_micro_instruction_step(mima_instance);
           }
 
-          _mima_run_micro_instruction_step(mima_instance);
+          document.getElementById('btn_run').value = "Pause";
+        }
+      };
+
+      document.getElementById('btn_mima_input').onclick = function(){
+
+      }
+
+      document.getElementById('source_code').onchange = function(){
+        var line = document.getElementById('compile_error');
+        if (line)
+        {
+          line.setAttribute("style", "background:#ffffff");
+          line.removeAttribute("id");
         }
       };
 
@@ -160,6 +204,7 @@ HLT</textarea>
             svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
             break;
         case 4:
+            console.log("MimaModel.RUN = " + value);
             MimaModel.RUN = value;
             svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
             break;
