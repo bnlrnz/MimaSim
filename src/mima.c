@@ -13,7 +13,7 @@
 
 mima_t mima_init()
 {
-    log_set_level(LOG_DEBUG);
+    log_set_level(LOG_TRACE);
 
     mima_t mima =
     {
@@ -155,6 +155,7 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
         if (mima_hit_active_breakpoint(mima))
         {
             mima_set_run(mima, mima_false);
+            mima_wasm_hit_breakpoint();
 #ifndef WEBASM
             mima_shell(mima);
 #endif
@@ -177,7 +178,7 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
         if (mima_hit_active_breakpoint(mima))
         {
             mima_set_run(mima, mima_false);
-            
+            mima_wasm_hit_breakpoint();
 #ifndef WEBASM
             mima_shell(mima);
 #endif
@@ -430,7 +431,6 @@ void mima_instruction_LDV(mima_t *mima)
             // I/O space
             if (address == mima_char_input)
             {
-                mima_wasm_send_string("Waiting for single char:");
                 printf("Waiting for single char:");
                 char res = getchar();
                 mima->memory_unit.SIR = res;
@@ -443,16 +443,14 @@ void mima_instruction_LDV(mima_t *mima)
 
             if (address == mima_integer_input)
             {
-                mima_wasm_send_string("Waiting for number (dec or hex [with 0x-prefix]):");
-                printf("Waiting for number (dec or hex [with 0x-prefix]):");
-                char number_string[32] = {0};
-                char *endptr;
-
                 int number = 0;
 
                 #ifdef WEBASM
                     number =  mima_wasm_input_single_int();
                 #else
+                    printf("Waiting for number (dec or hex [with 0x-prefix]):");
+                    char number_string[32] = {0};
+                    char *endptr;
                     fgets(number_string, 31, stdin);
                     number = strtol(number_string, &endptr, 0);
                 #endif
@@ -550,7 +548,7 @@ void mima_instruction_STV(mima_t *mima)
                 char cha[2];
                 cha[0] = (char)value;
                 cha[1] = 0;
-                mima_wasm_send_string(cha);
+                mima_wasm_to_output(cha);
                 printf("%c\n", value);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
@@ -561,7 +559,7 @@ void mima_instruction_STV(mima_t *mima)
             {
                 char num[32];
                 snprintf(num, 32, "%d\n", value);
-                mima_wasm_send_string(num);
+                mima_wasm_to_output(num);
                 printf("%d\n", value);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
@@ -612,6 +610,7 @@ void mima_instruction_HLT(mima_t *mima)
     log_info("  HLT - Stopping Mima");
     mima_set_run(mima, mima_false);
     mima_wasm_register_transfer(mima, RUN, IMMEDIATE, mima_false);
+    mima_wasm_halt();
     mima->processing_unit.MICRO_CYCLE = 0;
 }
 
@@ -962,7 +961,6 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
 void mima_delete(mima_t *mima)
 {
     free(mima->stv_callbacks);
-    free(mima->ldv_callbacks);
     free(mima->memory_unit.memory);
     free(mima->mima_labels);
     free(mima->mima_breakpoints);

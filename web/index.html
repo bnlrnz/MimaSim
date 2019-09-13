@@ -3,17 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>mima</title>
 
   <!-- numbering the textarea -->
   <style type="text/css">
     #editor{
       border:2px solid gray;position:relative;
-      height:720px;width:400px
+      height:720px;width:400px;margin: 8px;
     }
     #log_text{
       border:0px solid gray;position:relative;
       height:720px;width:600px
+    }
+    #output_text{
+      border:0px solid gray;position:relative;
+      height:720px;width:600px;margin-left: 16px;
     }
   </style>
 
@@ -21,9 +28,21 @@
   <script type="text/javascript" src="./tln.js"></script>
 </head>
 <body>
-  <div class="flex-container">
-    <div id="editor">
-      <textarea id="source_code">
+  <div class="flex-container-v">
+    <div class="flex-container">
+      <div class="flex-container-v" style="margin: 8px">
+        <div class="flex-container-v">
+          <input class="button" type="button" id="btn_compile" value="Compile"/>
+          <input class="button" type="button" id="btn_reset" value="Reset" disabled />
+        </div>
+        <div class="flex-container-v">
+          <input class="button" type="button" id="btn_run" value="Run" disabled /> 
+          <input class="button" type="button" id="btn_step" value="Step" disabled /> 
+          <input class="button" type="button" id="btn_mstep" value="Micro Step" disabled />
+        </div>
+      </div>
+      <div id="editor">
+        <textarea id="source_code">
 0xFF0 1     // F0
 0xFF1 1     // F1
 0xFF2 0     // Fn
@@ -43,6 +62,7 @@ STV 0x0c000004  // Output Fn
 LDV 0xFF1
 STV 0xFF0
 LDV 0xFF2
+B             // Breakpoint
 STV 0xFF1
 LDV 0xFFC
 ADD 0xFF3
@@ -51,24 +71,35 @@ EQL 0xFFD
 NOT
 JMN LOOP
 HLT
-</textarea>
-    </div>
-    <div class="flex-container-v" style="margin: 8px">
-      <div class="flex-container-v">
-        <input class="button" type="button" id="btn_compile" value="Compile"/>
+        </textarea>
       </div>
-      <div class="flex-container-v">
-        <input class="button" type="button" id="btn_run" value="Run" disabled/> 
-        <input class="button" type="button" id="btn_step" value="Step" disabled/> 
-        <input class="button" type="button" id="btn_mstep" value="Micro Step" disabled/>
-      </div>
-    </div>
-    <div>
-     <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml"></object>
+      <div>
+       <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml" style="margin: 8px;"></object>
+     </div>
    </div>
- </div>
- <div style="height:600px;width:600px">
-  <div id="log_text" style="overflow: auto;" readonly="readonly"></div>
+   <div class="flex-container" style="height:600px;width:100%;margin-top: 8px;">
+    <div class="flex-container-v">
+      <div>
+        <form name="loglevel_radio_form">
+          <fieldset id="loglevel_radio_field">
+            <input type="radio" name="loglevel" id="ll_trace" value="TRACE">
+            <label for="ll_trace">TRACE</label>
+            <input type="radio" name="loglevel" id="ll_debug" value="DEBUG">
+            <label for="ll_debug">DEBUG</label>
+            <input type="radio" name="loglevel" id="ll_info" value="INFO">
+            <label for="ll_info">INFO</label>
+            <input type="radio" name="loglevel" id="ll_warn" value="WARN">
+            <label for="ll_warn">WARN</label>
+          </fieldset>
+        </form>
+      </div>
+      <div id="log_text" style="overflow: auto;border: 2px solid gray;" readonly="readonly"></div>
+    </div>
+    <div class="flex-container-v">
+      <p style="margin-left: 16px">OUTPUT (0xC000002 (char) and 0xC000004 (int))</p>
+      <div id="output_text" style="overflow: auto;border: 2px solid gray;" readonly="readonly"></div>
+    </div>
+  </div>
 </div>
 <script src="MimaSim.js"></script>
 <script type="text/javascript">
@@ -91,14 +122,22 @@ HLT
   };
 
   var memoryLineMap = new Map();
-
   var running = false;
+  var mima_instance;
 
   Module.onRuntimeInitialized = async _ => {
-    var mima_instance = _mima_init();
+    mima_instance = _mima_init();
+    _mima_wasm_set_run(mima_instance, false);
+
+    // cache could prevent this in firefox :(
+    document.getElementById('btn_step').disabled = true;
+    document.getElementById('btn_mstep').disabled = true;
+    document.getElementById('btn_run').disabled = true;
+    document.getElementById('btn_reset').disabled = true;
 
     document.getElementById('btn_compile').onclick = async function(){
       memoryLineMap.clear();
+
       var value = document.getElementById('source_code').value;
       var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
       var res  = _mima_compile_s(mima_instance, ptr);
@@ -107,23 +146,33 @@ HLT
         document.getElementById('btn_step').disabled = false;
         document.getElementById('btn_mstep').disabled = false;
         document.getElementById('btn_run').disabled = false;
+        document.getElementById('btn_reset').disabled = false;
+        document.getElementById('btn_compile').disabled = true;
       }else{
         document.getElementById('btn_step').disabled = true;
         document.getElementById('btn_mstep').disabled = true;
         document.getElementById('btn_run').disabled = true;
+        document.getElementById('btn_reset').disabled = true;
+        document.getElementById('btn_compile').disabled = false;
       }
 
       _mima_wasm_free(ptr);
     };
 
     document.getElementById('btn_step').onclick = async function(){
+      _mima_wasm_set_run(mima_instance, true);
       _mima_run_instruction_step(mima_instance);
+      _mima_wasm_set_run(mima_instance, false);
+    };
+
+    document.getElementById('btn_mstep').onclick = async function(){
+      _mima_wasm_set_run(mima_instance, true);
+      _mima_run_micro_instruction_step(mima_instance);
+      _mima_wasm_set_run(mima_instance, false);
     };
 
     document.getElementById('btn_run').onclick = async function(){
-
       var id;
-
       if (running)
       {
         running = false;
@@ -131,6 +180,9 @@ HLT
         if(id) clearInterval(id);
         _mima_wasm_set_run(mima_instance, false);
         document.getElementById('btn_run').value = "Run";
+        document.getElementById('btn_step').disabled = false;
+        document.getElementById('btn_mstep').disabled = false;
+        document.getElementById('btn_reset').disabled = false;
       }
       else
       {
@@ -138,14 +190,48 @@ HLT
 
         _mima_wasm_set_run(mima_instance, true);
 
-        id = setInterval(runLoop, 100);
+        id = setInterval(runLoop, 10);
         function runLoop(){
           _mima_run_micro_instruction_step(mima_instance);
         }
 
         document.getElementById('btn_run').value = "Pause";
+        document.getElementById('btn_step').disabled = true;
+        document.getElementById('btn_mstep').disabled = true;
+        document.getElementById('btn_reset').disabled = true;
       }
     };
+
+    document.getElementById('btn_reset').onclick = function(){
+      document.getElementById('btn_reset').disabled = true;
+      document.getElementById('btn_compile').disabled = false;
+      document.getElementById('btn_step').disabled = true;
+      document.getElementById('btn_mstep').disabled = true;
+      document.getElementById('btn_run').disabled = true;
+
+      var lastLine = document.getElementById('current_line');
+
+      if (lastLine) {
+        lastLine.setAttribute('style', 'background:#ffffff;');
+        lastLine.removeAttribute('id');
+      }
+
+      resetMimaModel();
+
+      _mima_delete(mima_instance);
+      mima_instance = _mima_init();
+      _mima_wasm_set_run(mima_instance, false);
+
+      for( var i = 0; i < ll_radio.length; i++){
+        if(ll_radio[i].checked == true)
+        {
+          _mima_wasm_set_log_level(i-1);
+        }
+      }
+
+      document.getElementById('log_text').innerHTML = "";
+      document.getElementById('output_text').innerHTML = "";
+    }
 
     document.getElementById('source_code').onchange = function(){
       var line = document.getElementById('compile_error');
@@ -156,93 +242,173 @@ HLT
       }
     }
 
-    window.onbeforeunload = function(e) {
-      _mima_delete(mima_instance);
-    };
+    var ll_radio = document.forms.loglevel_radio_form;
+    var prev = null;
+
+    for( var i = 0; i < ll_radio.length; ++i){
+      ll_radio[i].addEventListener('change', function() {
+        if (this !== prev) {
+          prev = this;
+        }
+        switch(this.value){
+          case "TRACE": _mima_wasm_set_log_level(0); break;
+          case "DEBUG": _mima_wasm_set_log_level(1); break;
+          case "INFO": _mima_wasm_set_log_level(2); break;
+          case "WARN": _mima_wasm_set_log_level(3); break;
+        }
+      });
+    }
+
+    document.getElementById('ll_trace').checked = true;
   }
 
-  function getHexString(value){
-    if (value < 0)
-    {
-      value = 0xFFFFFFFF + value + 1;
-    }
-    return "0x" + ("00000000" + value.toString(16).toUpperCase()).substr(-8);
-  }
-
-  function getOpCodeName(opCode){
-    switch(opCode){
-      case 0: return "ADD";
-      case 1: return "AND";
-      case 2: return "OR";
-      case 3: return "XOR";
-      case 4: return "LDV";
-      case 5: return "STV";
-      case 6: return "LDC";
-      case 7: return "JMP";
-      case 8: return "JMN";
-      case 9: return "EQL";
-      case 0xF0: return "HLT";
-      case 0xF1: return "NOT";
-      case 0xF2: return "RAR";
-      case 0xF3: return "RRN";
-    }
-  }
-
-  function updateMimaState(target, value){
-    var svg = document.getElementById('mimaimg').contentDocument;
-
-    switch(target)
-    {
-      case 1:
-      MimaModel.IR = value;
-      svg.getElementById('ir_text').innerHTML = getHexString(value);
-      break;
-      case 2:
-      MimaModel.IAR = value;
-      svg.getElementById('iar_text').innerHTML = getHexString(value);
-      break;
-      case 3:
-      MimaModel.TRA = value;
-      svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
-      break;
-      case 4:
-      MimaModel.RUN = value;
-      svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
-      break;
-      case 5:
-      MimaModel.SIR = value;
-      svg.getElementById('sir_text').innerHTML = getHexString(value);
-      break;
-      case 6:
-      MimaModel.SAR = value;
-      svg.getElementById('sar_text').innerHTML = getHexString(value);
-      break;
-      case 7:
-      MimaModel.ACC = value;
-      svg.getElementById('acc_text').innerHTML = getHexString(value);
-      break;
-      case 8:
-      MimaModel.X = value;
-      svg.getElementById('x_text').innerHTML = getHexString(value);
-      break;
-      case 9:
-      MimaModel.Y = value;
-      svg.getElementById('y_text').innerHTML = getHexString(value);
-      break;
-      case 10:
-      MimaModel.Z = value;
-      svg.getElementById('z_text').innerHTML = getHexString(value);
-      break;
-      case 11:
-      MimaModel.ALU = value;
-      svg.getElementById('svg_104').innerHTML = getOpCodeName(value);
-      break;
-      case 12:
-      MimaModel.MICRO_CYCLE = value;
-      svg.getElementById('counter_text').innerHTML = value;
-      break;
-    }
+  function resetMimaModel(){
+   MimaModel = {
+    IR: 0,
+    IAR: 0,
+    TRA: 0,
+    RUN: 1,
+    SIR: 0,
+    SAR: 0,
+    ACC: 0,
+    X: 0,
+    Y: 0,
+    Z: 0,
+    ALU: -1,
+    MICRO_CYCLE: 1,
+    ONE: 1,
   };
+
+  var svg = document.getElementById('mimaimg').contentDocument;
+
+  svg.getElementById('ir_text').innerHTML = getHexString(MimaModel.IR);
+  svg.getElementById('iar_text').innerHTML = getHexString(MimaModel.IAR);
+  svg.getElementById('tra_label').setAttribute("fill", "#ffaaaa");
+  svg.getElementById('run_label').setAttribute("fill", "#ffaaaa");
+  svg.getElementById('sir_text').innerHTML = getHexString(MimaModel.SIR);
+  svg.getElementById('sar_text').innerHTML = getHexString(MimaModel.SAR);
+  svg.getElementById('acc_text').innerHTML = getHexString(MimaModel.ACC);
+  svg.getElementById('x_text').innerHTML = getHexString(MimaModel.X);
+  svg.getElementById('y_text').innerHTML = getHexString(MimaModel.Y);
+  svg.getElementById('z_text').innerHTML = getHexString(MimaModel.Z);
+  svg.getElementById('svg_104').innerHTML = getOpCodeName(MimaModel.ALU);
+  svg.getElementById('counter_text').innerHTML = MimaModel.MICRO_CYCLE;
+}
+
+function getHexString(value){
+  if (value < 0)
+  {
+    value = 0xFFFFFFFF + value + 1;
+  }
+  return "0x" + ("00000000" + value.toString(16).toUpperCase()).substr(-8);
+}
+
+function getOpCodeName(opCode){
+  switch(opCode){
+    case -1: return "ALU";
+    case 0: return "ADD";
+    case 1: return "AND";
+    case 2: return "OR";
+    case 3: return "XOR";
+    case 4: return "LDV";
+    case 5: return "STV";
+    case 6: return "LDC";
+    case 7: return "JMP";
+    case 8: return "JMN";
+    case 9: return "EQL";
+    case 0xF0: return "HLT";
+    case 0xF1: return "NOT";
+    case 0xF2: return "RAR";
+    case 0xF3: return "RRN";
+  }
+}
+
+function setHalted(){
+  document.getElementById('btn_run').value = "Run";
+  document.getElementById('btn_run').disabled = true;
+  document.getElementById('btn_step').disabled = true;
+  document.getElementById('btn_mstep').disabled = true;
+  document.getElementById('btn_reset').disabled = false;
+  running = false;
+}
+
+function hitBreakpoint(){
+  document.getElementById('btn_run').value = "Run";
+  document.getElementById('btn_run').disabled = false;
+  document.getElementById('btn_step').disabled = false;
+  document.getElementById('btn_mstep').disabled = false;
+  running = false;
+}
+
+function updateMimaState(target, value){
+  var svg = document.getElementById('mimaimg').contentDocument;
+
+  switch(target)
+  {
+    case 1:
+    MimaModel.IR = value;
+    svg.getElementById('ir_text').innerHTML = getHexString(value);
+    break;
+    case 2:
+    MimaModel.IAR = value;
+    svg.getElementById('iar_text').innerHTML = getHexString(value);
+
+    let line = memoryLineMap.get(value);
+
+    if(!line) break;
+
+    var lastLine = document.getElementById('current_line');
+
+    if (lastLine) {
+      lastLine.setAttribute('style', 'background:#ffffff;');
+      lastLine.removeAttribute('id');
+    }
+
+    document.querySelector('.tln-wrapper :nth-child('+line+')').setAttribute('style', 'background:#aaaaff;');
+    document.querySelector('.tln-wrapper :nth-child('+line+')').setAttribute('id', 'current_line');
+    break;
+    case 3:
+    MimaModel.TRA = value;
+    svg.getElementById('tra_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+    break;
+    case 4:
+    MimaModel.RUN = value;
+    svg.getElementById('run_label').setAttribute("fill", value ? "#aaffaa" : "#ffaaaa");
+    break;
+    case 5:
+    MimaModel.SIR = value;
+    svg.getElementById('sir_text').innerHTML = getHexString(value);
+    break;
+    case 6:
+    MimaModel.SAR = value;
+    svg.getElementById('sar_text').innerHTML = getHexString(value);
+    break;
+    case 7:
+    MimaModel.ACC = value;
+    svg.getElementById('acc_text').innerHTML = getHexString(value);
+    break;
+    case 8:
+    MimaModel.X = value;
+    svg.getElementById('x_text').innerHTML = getHexString(value);
+    break;
+    case 9:
+    MimaModel.Y = value;
+    svg.getElementById('y_text').innerHTML = getHexString(value);
+    break;
+    case 10:
+    MimaModel.Z = value;
+    svg.getElementById('z_text').innerHTML = getHexString(value);
+    break;
+    case 11:
+    MimaModel.ALU = value;
+    svg.getElementById('svg_104').innerHTML = getOpCodeName(value);
+    break;
+    case 12:
+    MimaModel.MICRO_CYCLE = value;
+    svg.getElementById('counter_text').innerHTML = value;
+    break;
+  }
+};
 </script>
 </body>
 </html>

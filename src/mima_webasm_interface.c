@@ -4,12 +4,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "log.h"
 #include "mima.h"
 #include "mima_webasm_interface.h"
 
 #define UNUSED(x) (void)(x)
 
-void mima_wasm_send_string(const char *str)
+void mima_wasm_to_log(const char *str)
 {
     UNUSED(str);
 #ifdef WEBASM
@@ -33,12 +34,34 @@ void mima_wasm_send_string(const char *str)
 #endif
 }
 
+void mima_wasm_to_output(const char* str)
+{
+    UNUSED(str);
+#ifdef WEBASM
+    EM_ASM_(
+    {
+        var ptr = $0;
+        var len = $1;
+        var message = UTF8ToString(ptr, $1);
+        var output = document.getElementById('output_text');
+        output.innerHTML = "\t" + message + "<br>" + output.innerHTML;
+        output.scrollTop = 0;
+    }, str, strlen(str));
+#endif
+}
+
 char mima_wasm_input_single_char()
 {
 #ifdef WEBASM
     return EM_ASM_(
     {
-        return prompt("Input single char: ", "");
+        var char;
+
+        do{
+         char = prompt("Input single char: ", "");
+        }while(char.length != 1);
+
+        return char;
     });
 #endif
     return 0;
@@ -49,7 +72,12 @@ int mima_wasm_input_single_int()
 #ifdef WEBASM
    return EM_ASM_(
     {
-       return prompt("Input single number, pls: ", "");
+        var number;
+        do{
+         number = prompt("Input single number, pls: ", "");
+        }while(isNaN(number));
+
+        return number;
     });
 #endif
    return 0;
@@ -62,19 +90,8 @@ void mima_wasm_push_memory_line_correspondence(size_t line_number, mima_word add
 #ifdef WEBASM
     EM_ASM_(
     {
-        lineMemoryMap.set($1, $0);
+        memoryLineMap.set($1, $0);
     }, line_number, address);
-#endif
-}
-
-void mima_wasm_mark_current_line(size_t line_number)
-{
-    UNUSED(line_number);
-#ifdef WEBASM
-    EM_ASM_(
-    {
-
-    }, line_number);
 #endif
 }
 
@@ -116,10 +133,30 @@ void mima_wasm_set_run(mima_t *mima, mima_bool run)
 #ifdef WEBASM
 EMSCRIPTEN_KEEPALIVE
 #endif
+void mima_wasm_hit_breakpoint()
+{
+#ifdef WEBASM
+    EM_ASM_(
+    {
+        hitBreakpoint();
+    });
+#endif
+}
+
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void mima_wasm_free(void* ptr)
 {
     if(ptr)
         free(ptr);
+}
+
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+void mima_wasm_set_log_level(int log_level){
+    log_set_level(log_level);
 }
 
 #ifdef WEBASM
@@ -130,7 +167,7 @@ void mima_wasm_halt()
 #ifdef WEBASM
     EM_ASM_(
     {
-        
+        setHalted();
     });
 #endif
 }

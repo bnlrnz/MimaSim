@@ -254,6 +254,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
 
             log_trace("Line %03zu: %3s 0x%08x -> stored at mem[0x%08x]", *line_number, mima_get_instruction_name(op_code), value, *memory_address);
             mima->memory_unit.memory[(*memory_address)++] = instruction;
+            mima_wasm_push_memory_line_correspondence(*line_number, *memory_address);
             return;
         }
 

@@ -38,16 +38,18 @@
     flex-direction: column; 
     flex-wrap: nowrap;
     background-color: white;
+    margin: 8px;
 }
 
 .flex-container-v > div{
-    justify-content: space-around;
+    justify-content: flex-start;
 }
 
 .flex-container{
     display: flex;
     flex-wrap: nowrap;
     background-color: white;
+    margin: 8px;
 }
 
 .flex-container > div{
