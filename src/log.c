@@ -121,7 +121,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
     va_start(args, fmt);
     vsprintf(message + strlen(message), fmt, args);
     va_end(args);
-    mima_wasm_send_string(message);
+    mima_wasm_to_log(message);
     return;
 #endif
 #ifdef LOG_USE_COLOR
