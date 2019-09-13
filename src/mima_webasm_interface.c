@@ -110,7 +110,7 @@ EMSCRIPTEN_KEEPALIVE
 #endif
 void mima_wasm_set_run(mima_t *mima, mima_bool run)
 {
-    mima_set_run(mima, run, "mima_wasm_set_run");
+    mima_set_run(mima, run);
 }
 
 #ifdef WEBASM
@@ -120,4 +120,17 @@ void mima_wasm_free(void* ptr)
 {
     if(ptr)
         free(ptr);
+}
+
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
+void mima_wasm_halt()
+{
+#ifdef WEBASM
+    EM_ASM_(
+    {
+        
+    });
+#endif
 }

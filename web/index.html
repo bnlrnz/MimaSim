@@ -120,10 +120,6 @@ HLT
       _mima_run_instruction_step(mima_instance);
     };
 
-    document.getElementById('btn_step').onclick = async function(){
-      _mima_run_instruction_step(mima_instance);
-    };
-
     document.getElementById('btn_run').onclick = async function(){
 
       var id;
@@ -158,8 +154,6 @@ HLT
         line.setAttribute("style", "background:#ffffff");
         line.removeAttribute("id");
       }
-
-      _mima_run_micro_instruction_step(mima_instance);
     }
 
     window.onbeforeunload = function(e) {

@@ -86,9 +86,8 @@ mima_t mima_init()
     return mima;
 }
 
-void mima_set_run(mima_t* mima, mima_bool run, const char* function)
+void mima_set_run(mima_t* mima, mima_bool run)
 {
-    log_debug("%s is setting RUN to %s", function, run ? "true" : "false");
     if (mima->control_unit.RUN == run)
     {
         return;
@@ -100,7 +99,7 @@ void mima_set_run(mima_t* mima, mima_bool run, const char* function)
 
 void mima_run(mima_t *mima, mima_bool interactive)
 {
-    mima_set_run(mima, mima_true, "mima_run");
+    mima_set_run(mima, mima_true);
 
     log_info("\n\n==========================\nStarting Mima...\n==========================\n");
     if (interactive)
@@ -127,7 +126,7 @@ void mima_run_instruction_step(mima_t *mima){
 
 void mima_run_instruction_steps(mima_t *mima, char *arg)
 {
-    mima_set_run(mima, mima_true, "mima_run_instruction_steps");
+    mima_set_run(mima, mima_true);
 
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
@@ -155,16 +154,16 @@ void mima_run_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima_set_run(mima, mima_false, "mima_run_instruction_steps brkpnt");
+            mima_set_run(mima, mima_false);
+#ifndef WEBASM
             mima_shell(mima);
+#endif
         }
     }
 }
 
 void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 {
-    //mima_set_run(mima, mima_true, "mima_run_micro_instruction_steps");
-
     char *endptr;
     int steps = strtol(arg, &endptr, 0);
 
@@ -177,8 +176,11 @@ void mima_run_micro_instruction_steps(mima_t *mima, char *arg)
 
         if (mima_hit_active_breakpoint(mima))
         {
-            mima_set_run(mima, mima_false, "mima_run_micro_instruction_steps brkpnt");
+            mima_set_run(mima, mima_false);
+            
+#ifndef WEBASM
             mima_shell(mima);
+#endif
         }
     }
 }
@@ -608,7 +610,7 @@ void mima_instruction_HLT(mima_t *mima)
 {
     log_trace("  HLT - %02d: Setting RUN to false", mima->processing_unit.MICRO_CYCLE);
     log_info("  HLT - Stopping Mima");
-    mima_set_run(mima, mima_false, "mima_instruction_HLT");
+    mima_set_run(mima, mima_false);
     mima_wasm_register_transfer(mima, RUN, IMMEDIATE, mima_false);
     mima->processing_unit.MICRO_CYCLE = 0;
 }

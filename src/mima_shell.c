@@ -117,7 +117,7 @@ int mima_shell_execute_command(mima_t *mima, char *input)
     switch(input[0])
     {
     case 's':
-        mima_set_run(mima, mima_true, "mima_shell_execute_command s");
+        mima_set_run(mima, mima_true);
         mima_run_micro_instruction_steps(mima, input + 1);
         break;
     case 'S':
