@@ -136,24 +136,24 @@ Module.onRuntimeInitialized = async _ =>
         document.getElementById('btn_step').disabled = true;
         document.getElementById('btn_mstep').disabled = true;
         document.getElementById('btn_run').disabled = true;
+
         var lastLine = document.getElementById('current_line');
         if (lastLine)
         {
             lastLine.setAttribute('style', 'background:#ffffff;');
             lastLine.removeAttribute('id');
         }
+
         resetMimaModel();
         resetMimaGUI();
+
         _mima_delete(mima_instance);
         mima_instance = _mima_init();
         _mima_wasm_set_run(mima_instance, false);
-        for (var i = 0; i < ll_radio.length; i++)
-        {
-            if (ll_radio[i].checked == true)
-            {
-                _mima_wasm_set_log_level(i - 1);
-            }
-        }
+
+        _mima_wasm_set_log_level(2 /*INFO*/);
+        document.getElementById('ll_info').checked = true;
+
         document.getElementById('log_text').innerHTML = "";
         document.getElementById('output_text').innerHTML = "";
         if (runTimerID)
@@ -185,9 +185,6 @@ Module.onRuntimeInitialized = async _ =>
             {
             case "TRACE":
                 _mima_wasm_set_log_level(0);
-                break;
-            case "DEBUG":
-                _mima_wasm_set_log_level(1);
                 break;
             case "INFO":
                 _mima_wasm_set_log_level(2);
@@ -235,7 +232,7 @@ function resetMimaModel()
     svg.getElementById('x_text').innerHTML = getHexString(MimaModel.X);
     svg.getElementById('y_text').innerHTML = getHexString(MimaModel.Y);
     svg.getElementById('z_text').innerHTML = getHexString(MimaModel.Z);
-    svg.getElementById('svg_104').innerHTML = getOpCodeName(MimaModel.ALU);
+    svg.getElementById('alu_text').innerHTML = getOpCodeName(MimaModel.ALU);
     svg.getElementById('counter_text').innerHTML = MimaModel.MICRO_CYCLE;
 }
 
@@ -364,6 +361,8 @@ function resetMimaGUI()
     svg.getElementById('arrow_sar_mem').setAttribute('style', 'fill:#ffffff;stroke:#000000;stroke-miterlimit:10');
 
     svg.getElementById('alu_text').innerHTML = "ALU";
+
+    svg.getElementById('counter_text').innerHTML = "1";
 }
 
 function updateMimaState(source, target, value)
