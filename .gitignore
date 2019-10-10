@@ -56,7 +56,4 @@ dkms.conf
 build
 
 # WEBASM
-MimaSim.html
-MimaSim.js
-MimaSim.wasm
 MimaSim.js.mem
