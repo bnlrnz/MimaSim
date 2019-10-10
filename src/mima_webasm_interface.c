@@ -116,8 +116,7 @@ void mima_wasm_register_transfer(mima_t *mima, mima_register_type target, mima_r
 #ifdef WEBASM
     EM_ASM_(
     {
-        //TODO trigger transfer function source -> target vis
-        updateMimaState($1, $2);
+        updateMimaState($0, $1, $2);
     }, source, target, value);
 #endif
 }

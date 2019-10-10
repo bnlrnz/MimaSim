@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
     if (!mima_compile_f(&mima, fileName))
     {
-        printf("Failed to compile %s :(\n", fileName);
+        printf("Failed to assemble %s :(\n", fileName);
         return -1;
     }
 

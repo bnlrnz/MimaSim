@@ -307,7 +307,7 @@ void mima_compile_line(mima_t *mima, char* line, size_t* line_number, size_t* me
 
 mima_bool mima_compile_string(mima_t *mima, const char *source_code)
 {
-    log_info("Compiling ...");
+    log_info("Assembling ...");
 
     mima_scan_string_for_labels(mima, source_code);
 
@@ -336,7 +336,7 @@ mima_bool mima_compile_string(mima_t *mima, const char *source_code)
 
     if (error > 0)
     {
-        log_error("Found %d error(s) or warning(s) while compiling.", error);
+        log_error("Found %d error(s) or warning(s) while assembling.", error);
         log_error("Setting mima RUN flag to false.");
         log_error("Nothing will be executed...");
         mima->control_unit.RUN = mima_false;
@@ -344,7 +344,7 @@ mima_bool mima_compile_string(mima_t *mima, const char *source_code)
     }
     else
     {
-        log_info("Compiled %d lines without errors.", line_number);
+        log_info("Assembled %d lines without errors.", line_number);
     }
 
     return mima_true;
@@ -362,7 +362,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
 
     mima->source_file = file_name;
     
-    log_info("Compiling %s ...", file_name);
+    log_info("Assembling %s ...", file_name);
 
     // First, scan the file for labels.
     // This two-pass approach allows us to use them without forward declaration.
@@ -390,7 +390,7 @@ mima_bool mima_compile_file(mima_t *mima, const char *file_name)
     }
     else
     {
-        log_info("Compiled %d lines without errors.", line_number);
+        log_info("Assembled %d lines without errors.", line_number);
     }
 
     return mima_true;

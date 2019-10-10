@@ -16,7 +16,8 @@ typedef enum _mima_register_type{
 	MICRO_CYCLE,
 	ONE,
 	IMMEDIATE,
-	MEMORY
+	MEMORY,
+	IOMEMORY
 }mima_register_type;
 
 void mima_wasm_set_run(mima_t *mima, mima_bool run);

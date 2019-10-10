@@ -252,7 +252,7 @@ void mima_micro_instruction_step(mima_t *mima)
         break;
     case 3:
         mima->processing_unit.Z = mima->processing_unit.X + mima->processing_unit.Y;
-        mima_wasm_register_transfer(mima, Z, X, mima->processing_unit.Z);
+        mima_wasm_register_transfer(mima, Z, ALU, mima->processing_unit.Z);
         log_trace("Fetch - %02d: X + Y -> Z \t\t\t 0x%08x + 0x%08x -> Z \t I/O waiting...", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X, mima->processing_unit.Y);
         break;
     case 4:
@@ -261,7 +261,7 @@ void mima_micro_instruction_step(mima_t *mima)
         log_trace("Fetch - %02d: Z -> IAR \t\t\t 0x%08x -> IAR", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.Z);
         mima->current_instruction = mima_instruction_decode(mima);
         mima->memory_unit.SIR = mima->memory_unit.memory[mima->memory_unit.SAR];
-        mima_wasm_register_transfer(mima, SIR, SAR, mima->memory_unit.memory[mima->memory_unit.SAR]);
+        mima_wasm_register_transfer(mima, SIR, MEMORY, mima->memory_unit.memory[mima->memory_unit.SAR]);
         log_trace("Fetch - %02d: mem[SAR] -> SIR \t\t mem[0x%08x] -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, mima->memory_unit.SAR);
         break;
     case 5:
@@ -434,7 +434,7 @@ void mima_instruction_LDV(mima_t *mima)
                 printf("Waiting for single char:");
                 char res = getchar();
                 mima->memory_unit.SIR = res;
-                mima_wasm_register_transfer(mima, SIR, IMMEDIATE, res);
+                mima_wasm_register_transfer(mima, SIR, IOMEMORY, res);
                 log_trace("  LDV - %02d: Char -> SIR \t\t '%c' -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, res);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
@@ -456,7 +456,7 @@ void mima_instruction_LDV(mima_t *mima)
                 #endif
                 
                 mima->memory_unit.SIR = number;
-                mima_wasm_register_transfer(mima, SIR, IMMEDIATE, number);
+                mima_wasm_register_transfer(mima, SIR, IOMEMORY, number);
                 log_trace("  LDV - %02d: Integer -> SIR \t\t %d aka 0x%08x -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, number, number);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
@@ -541,7 +541,8 @@ void mima_instruction_STV(mima_t *mima)
         {
             mima->control_unit.TRA = mima_true;
             mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_true);
-
+            mima_wasm_register_transfer(mima, IOMEMORY, SIR, mima->memory_unit.SIR);
+            
             // writing to IO -> ignoring the  first 4 bits
             if (address == mima_char_output)
             {
@@ -740,7 +741,7 @@ void mima_instruction_NOT(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
-        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
+        mima_wasm_register_transfer(mima, X, ACC, mima->processing_unit.ACC);
         log_trace("  NOT - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -756,7 +757,7 @@ void mima_instruction_NOT(mima_t *mima)
         break;
     case 11:
         mima->processing_unit.Z = ~mima->processing_unit.X;
-        mima_wasm_register_transfer(mima, Z, IMMEDIATE, ~mima->processing_unit.X);
+        mima_wasm_register_transfer(mima, Z, ALU, ~mima->processing_unit.X);
         log_trace("  NOT - %02d: ~X -> Z \t\t\t ~0x%08x -> Z", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.X);
         break;
     case 12:
@@ -780,7 +781,7 @@ void mima_instruction_RAR(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
-        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
+        mima_wasm_register_transfer(mima, X, ACC, mima->processing_unit.ACC);
         log_trace("  RAR - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -803,7 +804,7 @@ void mima_instruction_RAR(mima_t *mima)
         int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
-        mima_wasm_register_transfer(mima, Z, IMMEDIATE, combined);
+        mima_wasm_register_transfer(mima, Z, ALU, combined);
         log_trace("  RAR - %02d: (X >>> 1) | (X << 31) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }
@@ -828,7 +829,7 @@ void mima_instruction_RRN(mima_t *mima)
         break;
     case 7:
         mima->processing_unit.X = mima->processing_unit.ACC;
-        mima_wasm_register_transfer(mima, ACC, X, mima->processing_unit.ACC);
+        mima_wasm_register_transfer(mima, X, ACC, mima->processing_unit.ACC);
         log_trace("  RRN - %02d: ACC -> X \t\t\t 0x%08x -> X", mima->processing_unit.MICRO_CYCLE, mima->processing_unit.ACC);
         break;
     case 8:
@@ -851,7 +852,7 @@ void mima_instruction_RRN(mima_t *mima)
         int32_t rotated = mima->processing_unit.X << (32 - mima->processing_unit.Y);
         int32_t combined = shifted | rotated;
         mima->processing_unit.Z = combined;
-        mima_wasm_register_transfer(mima, Z, IMMEDIATE, combined);
+        mima_wasm_register_transfer(mima, Z, ALU, combined);
         log_trace("  RRN - %02d: (X >>> Y) | (X << (32-Y)) -> Z", mima->processing_unit.MICRO_CYCLE);
         break;
     }

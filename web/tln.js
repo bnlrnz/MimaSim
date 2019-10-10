@@ -64,7 +64,7 @@ const TLN = {
             return function() {  el.scrollTop = ta.scrollTop;  }
         }(ta, el);
         for(let i = __scroll_evts.length - 1; i >= 0; i--) {
-            ta.addEventListener(__scroll_evts[i], __scroll_hdlr);
+            ta.addEventListener(__scroll_evts[i], __scroll_hdlr, {passive: true});
             TLN.eventList[id].push({
                 evt: __scroll_evts[i],
                 hdlr: __scroll_hdlr
