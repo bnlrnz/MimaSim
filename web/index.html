@@ -20,7 +20,7 @@
     }
     #output_text{
     border:0px solid gray;position:relative;
-    height:720px;width:600px;margin-left: 16px;
+    height:720px;width:600px;
     }
   /*]]>*/
   </style>
@@ -79,18 +79,18 @@ HLT</textarea>
     </div>
     <div class="flex-container" style="height:600px;width:100%;margin-top: 8px;">
       <div class="flex-container-v">
-        <p>LOG</p>
-        <div id="log_text" style="overflow: auto;border: 2px solid gray;" readonly="readonly"></div>
-        <div>
-          <form name="loglevel_radio_form" id="loglevel_radio_form">
+        <div class="flex-container">
+          <p>LOG</p>
+          <form style="margin-top: 0.5em" name="loglevel_radio_form" id="loglevel_radio_form">
             <fieldset id="loglevel_radio_field" style="border: 0px">
               <input type="radio" name="loglevel" id="ll_trace" value="TRACE" /><label for="ll_trace" style="margin-right: 16px">TRACE</label> <input type="radio" name="loglevel" id="ll_debug" value="DEBUG" /><label for="ll_debug" style="margin-right: 16px">DEBUG</label> <input type="radio" name="loglevel" id="ll_info" value="INFO" /><label for="ll_info" style="margin-right: 16px">INFO</label> <input type="radio" name="loglevel" id="ll_warn" value="WARN" /><label for="ll_warn" style="margin-right: 16px">WARN</label>
             </fieldset>
           </form>
         </div>
+        <div id="log_text" style="overflow: auto;border: 2px solid gray;" readonly="readonly"></div>
       </div>
       <div class="flex-container-v">
-        <p style="margin-left: 16px">OUTPUT (0xC000003 (char) and 0xC000004 (int))</p>
+        <p>OUTPUT (0xC000003 (char) and 0xC000004 (int))</p>
         <div id="output_text" style="overflow: auto;border: 2px solid gray;" readonly="readonly"></div>
       </div>
     </div>
