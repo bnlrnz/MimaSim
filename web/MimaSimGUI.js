@@ -362,6 +362,8 @@ function resetMimaGUI()
 
     svg.getElementById('arrow_sar_iobus').setAttribute('style', 'fill:#ffffff;stroke:#000000;stroke-miterlimit:10');
     svg.getElementById('arrow_sar_mem').setAttribute('style', 'fill:#ffffff;stroke:#000000;stroke-miterlimit:10');
+
+    svg.getElementById('alu_text').innerHTML = "ALU";
 }
 
 function updateMimaState(source, target, value)
