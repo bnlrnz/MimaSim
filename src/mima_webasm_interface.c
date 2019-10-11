@@ -61,7 +61,7 @@ char mima_wasm_input_single_char()
          char = prompt("Input single char: ", "");
         }while(char.length != 1);
 
-        return char;
+        return char.charCodeAt(0);
     });
 #endif
     return 0;

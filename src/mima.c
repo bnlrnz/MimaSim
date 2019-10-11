@@ -431,8 +431,15 @@ void mima_instruction_LDV(mima_t *mima)
             // I/O space
             if (address == mima_char_input)
             {
-                printf("Waiting for single char:");
-                char res = getchar();
+                char res;
+                
+                #ifdef WEBASM
+                    res =  mima_wasm_input_single_char();
+                #else
+                    printf("Waiting for single char:");
+                    res = getchar();
+                #endif
+
                 mima->memory_unit.SIR = res;
                 mima_wasm_register_transfer(mima, SIR, IOMEMORY, res);
                 log_trace("  LDV - %02d: Char -> SIR \t\t '%c' -> SIR \t I/O Read done", mima->processing_unit.MICRO_CYCLE, res);
@@ -550,7 +557,7 @@ void mima_instruction_STV(mima_t *mima)
                 cha[0] = (char)value;
                 cha[1] = 0;
                 mima_wasm_to_output(cha);
-                printf("%c\n", value);
+                printf("Output: %c - %d\n", value, value);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
@@ -561,7 +568,7 @@ void mima_instruction_STV(mima_t *mima)
                 char num[32];
                 snprintf(num, 32, "%d\n", value);
                 mima_wasm_to_output(num);
-                printf("%d\n", value);
+                printf("Output: %d\n", value);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
