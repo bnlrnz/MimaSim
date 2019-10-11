@@ -148,6 +148,7 @@ Module.onRuntimeInitialized = async _ =>
         resetMimaGUI();
 
         _mima_delete(mima_instance);
+        
         mima_instance = _mima_init();
         _mima_wasm_set_run(mima_instance, false);
 

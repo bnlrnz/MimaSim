@@ -10,6 +10,31 @@
 
 #define UNUSED(x) (void)(x)
 
+void mima_wasm_to_memorydump(mima_t* mima, mima_register address){
+    UNUSED(mima);
+    UNUSED(address);
+#ifdef WEBASM
+
+    size_t textsize = 64 * sizeof(char) * 44 + 1;
+    char memdump[textsize];
+    memset(memdump, 32, textsize);
+
+    mima_dump_memory_as_text_at(mima, address, memdump);
+
+    memdump[textsize-1] = '\0'; // just to be shure
+
+    EM_ASM_(
+    {
+        var ptr = $0;
+        var len = $1;
+        var message = UTF8ToString(ptr, $1);
+        var output = document.getElementById('memorydump_text');
+        output.innerHTML = message;
+        output.scrollTop = 0;
+    }, memdump, strlen(memdump));
+#endif
+}
+
 void mima_wasm_to_log(const char *str)
 {
     UNUSED(str);
@@ -28,7 +53,7 @@ void mima_wasm_to_log(const char *str)
         message = message.replace("ERROR", "<font color=\"red\">ERROR</font>");
         message = message.replace("FATAL", "<font color=\"red\">FATAL</font>");
 
-        log.innerHTML = "<p>" + message + "</p>" + log.innerHTML;
+        log.innerHTML = "<p style=\"margin: 0;\">" + message + "</p>" + log.innerHTML;
         log.scrollTop = 0;
     }, str, strlen(str));
 #endif

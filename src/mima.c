@@ -890,6 +890,24 @@ void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count)
     }
 }
 
+void mima_dump_memory_as_text_at(mima_t* mima, mima_register address, char* text)
+{
+    if (/*address < 0 || is unsigned*/ address > mima_words - 1)
+    {
+        log_warn("Invalid address %d\n", address);
+        return;
+    }
+
+    for (size_t i = 0; address + i < mima_words - 1 && i < 64; ++i)
+    {
+        mima_instruction instruction = mima_instruction_decode_mem(mima->memory_unit.memory[address + i]);
+        snprintf(text, 45, "mem[0x%08lx] 0x%08x : %s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
+        text += 44;
+    }
+    
+    *text = 0;
+}
+
 void mima_print_memory_unit_state(mima_t *mima)
 {
     printf("\n");
@@ -939,7 +957,7 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
     case AND:
         return "AND";
     case OR:
-        return "OR";
+        return "OR ";
     case XOR:
         return "XOR";
     case LDV:
@@ -963,7 +981,7 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
     case RRN:
         return "RRN";
     }
-    return "INVALID";
+    return "INV";
 }
 
 void mima_delete(mima_t *mima)

@@ -132,6 +132,7 @@ const char *mima_get_instruction_name(mima_instruction_type instruction);
 
 void mima_print_state(mima_t *mima);
 void mima_print_memory_at(mima_t *mima, mima_register address, uint32_t count);
+void mima_dump_memory_as_text_at(mima_t* mima, mima_register address, char* text);
 void mima_print_memory_unit_state(mima_t *mima);
 void mima_print_control_unit_state(mima_t *mima);
 void mima_print_processing_unit_state(mima_t *mima);

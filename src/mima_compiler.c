@@ -347,6 +347,8 @@ mima_bool mima_compile_string(mima_t *mima, const char *source_code)
         log_info("Assembled %d lines without errors.", line_number);
     }
 
+    mima_wasm_to_memorydump(mima, 0);
+
     return mima_true;
 }
 
