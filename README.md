@@ -2,6 +2,7 @@
 A Mima Simulator written in C.
 The MiMa (aka Mininal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). 
 
+
 ### Build
 
 ```bash
@@ -197,7 +198,18 @@ ADD 0x01 #you can also do that
 STV 0x00 // and this
 ```
 
+### TODOs/Future Work
 
+- better debugging tools for web and command line
+    - track specific memory address(es)
+    - clickable breakpoints for web (click on line number)
+    - visualization of control commands (bus, memory etc.)
+    - correspondency mnemonic + memory while executing a program
+- change register values on the fly
+- variable/address naming (more abstraction useful?)
+- web UI redesign
+- user guide/documentation on web interface
+- mouse over infos for components in web interface/mima graphic
 
 
 
