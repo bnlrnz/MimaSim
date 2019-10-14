@@ -1,7 +1,6 @@
 # MimaSim
-A Mima Simulator written in C.
-The MiMa (aka Mininal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). 
-
+A Mima Simulator written in C with a command line interface and a web frontend based on javascript and webassembly.
+The MiMa (aka Mininal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). It is used at the TU Bergakademie Freiberg.
 
 ### Build
 
@@ -24,6 +23,8 @@ $./MimaSim fibonacci.asm
 ```
 
 ### Build for Web
+
+You do not need to build for web by your own. If you just want to play around, go to [bnlrnz.de](bnlrnz.de) or use the precompiled files under web/.
 
 You need emscripten (https://emscripten.org/docs/getting_started/downloads.html) to build for web/webasm.
 
