@@ -10,6 +10,9 @@
 
 #define UNUSED(x) (void)(x)
 
+#ifdef WEBASM
+EMSCRIPTEN_KEEPALIVE
+#endif
 void mima_wasm_to_memorydump(mima_t* mima, mima_register address){
     UNUSED(mima);
     UNUSED(address);

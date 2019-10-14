@@ -901,7 +901,7 @@ void mima_dump_memory_as_text_at(mima_t* mima, mima_register address, char* text
     for (size_t i = 0; address + i < mima_words - 1 && i < 64; ++i)
     {
         mima_instruction instruction = mima_instruction_decode_mem(mima->memory_unit.memory[address + i]);
-        snprintf(text, 45, "mem[0x%08lx] 0x%08x : %s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
+        snprintf(text, 45, "mem[0x%08lx] 0x%08x : %-3s 0x%08x\n", address + i, mima->memory_unit.memory[address + i], mima_get_instruction_name(instruction.op_code), instruction.value);
         text += 44;
     }
     

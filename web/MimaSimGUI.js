@@ -55,6 +55,7 @@ Module.onRuntimeInitialized = async _ =>
     document.getElementById('btn_mstep').disabled = true;
     document.getElementById('btn_run').disabled = true;
     document.getElementById('btn_reset').disabled = true;
+    document.getElementById('btn_show_mem').disabled = true;
 
     document.getElementById('btn_compile').onclick = async function ()
     {
@@ -69,6 +70,7 @@ Module.onRuntimeInitialized = async _ =>
             document.getElementById('btn_run').disabled = false;
             document.getElementById('btn_reset').disabled = false;
             document.getElementById('btn_compile').disabled = true;
+            document.getElementById('btn_show_mem').disabled = false;
         }
         else
         {
@@ -77,6 +79,7 @@ Module.onRuntimeInitialized = async _ =>
             document.getElementById('btn_run').disabled = true;
             document.getElementById('btn_reset').disabled = true;
             document.getElementById('btn_compile').disabled = false;
+            document.getElementById('btn_show_mem').disabled = true;
         }
         _mima_wasm_free(ptr);
     };
@@ -109,6 +112,7 @@ Module.onRuntimeInitialized = async _ =>
             document.getElementById('btn_step').disabled = false;
             document.getElementById('btn_mstep').disabled = false;
             document.getElementById('btn_reset').disabled = false;
+            document.getElementById('btn_show_mem').disabled = false;
         }
         else
         {
@@ -136,6 +140,7 @@ Module.onRuntimeInitialized = async _ =>
         document.getElementById('btn_step').disabled = true;
         document.getElementById('btn_mstep').disabled = true;
         document.getElementById('btn_run').disabled = true;
+        document.getElementById('btn_show_mem').disabled = true;
 
         var lastLine = document.getElementById('current_line');
         if (lastLine)
@@ -159,6 +164,12 @@ Module.onRuntimeInitialized = async _ =>
         document.getElementById('output_text').innerHTML = "";
         if (runTimerID)
             clearInterval(runTimerID);
+    }
+
+    document.getElementById('btn_show_mem').onclick = function ()
+    {
+        var addressString = document.getElementById('mem_add').value;
+        _mima_wasm_to_memorydump(mima_instance, parseInt(addressString, 0));
     }
 
     document.getElementById('source_code').onchange = function ()
@@ -290,6 +301,7 @@ function setHalted()
     document.getElementById('btn_step').disabled = true;
     document.getElementById('btn_mstep').disabled = true;
     document.getElementById('btn_reset').disabled = false;
+    document.getElementById('btn_show_mem').disabled = false;
     running = false;
     if (runTimerID)
         clearInterval(runTimerID);
@@ -302,6 +314,7 @@ function hitBreakpoint()
     document.getElementById('btn_step').disabled = false;
     document.getElementById('btn_mstep').disabled = false;
     document.getElementById('btn_reset').disabled = false;
+    document.getElementById('btn_show_mem').disabled = false;
     document.getElementById('current_line').setAttribute('style', 'background:#eeaaff;');
     running = false;
     if (runTimerID)

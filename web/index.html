@@ -23,7 +23,7 @@
             <input class="button" type="button" id="btn_run" value="Run" disabled="disabled" /> <input class="button" type="button" id="btn_step" value="Step" disabled="disabled" /> <input class="button" type="button" id="btn_mstep" value="Micro Step" disabled="disabled" />
           </div>
         </div>
-        <div id="editor">
+        <div id="editor" style="flex-grow: 1">
           <textarea id="source_code">
 // Fibonacci
 0xFF0 1     // F0
@@ -56,7 +56,7 @@ JMN LOOP
 HLT</textarea>
         </div>
         <div>
-          <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml" style="margin: 8px;">
+          <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml" style="margin: 16px;">
           </object>
         </div>
       </div>
@@ -69,6 +69,9 @@ HLT</textarea>
           <div class="flex-container-v" style="height: 90%;flex: 4">
             <div>MEMORY</div>
             <div id="memorydump_text" style="overflow: auto;border: 2px solid gray;height: 100%" readonly="readonly"></div>
+            <div class="flex-container" style="justify-content: center">
+              <label for="mem_add">Address:</label><input type="text" id="mem_add" value="0x00000000"><input type="button" id="btn_show_mem" value="Show" style="margin-left: 8px" disabled="disabled">
+            </div>
           </div>
 
           <div class="flex-container-v" style="height: 90%;flex: 6">
