@@ -10,8 +10,8 @@
     <link rel="stylesheet" type="text/css" href="./tln.min.css" />
     <script type="text/javascript" src="./tln.min.js"></script>
   </head>
-  <body>
-    <div class="flex-container-v" style="height: 99%;width: 99%;">
+  <body style="max-width: 100vw;">
+    <div class="flex-container-v" style="height: 100%;width: 100%;align-items: center">
       <h1 style="text-align: center">WebAssembly Mima Simulator</h1>
       <p style="text-align: center"><a href="https://github.com/bnlrnz/MimaSim">https://github.com/bnlrnz/MimaSim</a></p>
       <div class="flex-container">
@@ -23,7 +23,7 @@
             <input class="button" type="button" id="btn_run" value="Run" disabled="disabled" /> <input class="button" type="button" id="btn_step" value="Step" disabled="disabled" /> <input class="button" type="button" id="btn_mstep" value="Micro Step" disabled="disabled" />
           </div>
         </div>
-        <div id="editor" style="flex-grow: 1">
+        <div id="editor" style="flex-grow: 1;width: 24em">
           <textarea id="source_code">
 // Fibonacci
 0xFF0 1     // F0
@@ -56,11 +56,11 @@ JMN LOOP
 HLT</textarea>
         </div>
         <div>
-          <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml" style="margin: 16px;">
+          <object id="mimaimg" src="mima.min.svg" data="mima.min.svg" type="image/svg+xml" style="margin: 16px;flex: 1">
           </object>
         </div>
       </div>
-      <div class="flex-container" style="height:100%;width:99%;flex: 1;flex-basis: fill;">
+      <div class="flex-container" style="min-height: 16em;height:100%;width:99%;">
           <div class="flex-container-v" style="height: 90%;flex: 1">
             <div>OUTPUT</div>
             <div id="output_text" style="overflow: auto;border: 2px solid gray;height: 100%" readonly="readonly"></div>
