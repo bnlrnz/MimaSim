@@ -987,6 +987,7 @@ const char *mima_get_instruction_name(mima_instruction_type op_code)
 void mima_delete(mima_t *mima)
 {
     free(mima->stv_callbacks);
+    free(mima->ldv_callbacks);
     free(mima->memory_unit.memory);
     free(mima->mima_labels);
     free(mima->mima_breakpoints);
