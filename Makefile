@@ -19,7 +19,6 @@ $(TARGET): $(OBJECTS)
 .PHONY: clean
 clean:
 	rm -rf $(TARGET) $(OBJECTS)
-	rm -rf web/MimaSim.wasm web/MimaSim.js
 
 debug: CFLAGS += -DDEBUG -g -fsanitize=address -fsanitize=undefined
 debug: LDFLAGS += -fsanitize=address -fsanitize=undefined
