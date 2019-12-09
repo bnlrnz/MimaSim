@@ -64,7 +64,7 @@ q.............quits mima
 |----------|--------|--------------------------------------|-------------------------------------------------------------------------------------------|
 | ADD a    | 0x0    | ACC ← ACC + mem[a]                   | Add value at address a to Accumulator                                                     |
 | AND a    | 0x1    | ACC ← ACC & mem[a]                   | Link value at address a to Accumulator by bitwise AND                                     |
-| OR a     | 0x2    | ACC ← ACC | mem[a]                   | Link value at address a to Accumulator by bitwise OR                                      |
+| OR a     | 0x2    | ACC ← ACC \| mem[a]                   | Link value at address a to Accumulator by bitwise OR                                      |
 | XOR a    | 0x3    | ACC ← ACC ^ mem[a]                   | Link value at address a to Accumulator by bitwise XOR                                     |
 | LDV a    | 0x4    | ACC ← mem[a]                         | Load value at address a into Accumulator                                                  |
 | STV a    | 0x5    | mem[a] ← ACC                         | Store value in Accumulator at address a                                                   |
