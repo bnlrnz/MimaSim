@@ -44,6 +44,7 @@ mima_t mima_init()
 
     // we allocate mima words aka 32 Bit integers
     mima.memory_unit.memory = malloc(mima_words * sizeof(mima_word));
+    memset(mima.memory_unit.memory, 0, mima_words * sizeof(mima_word));
 
     if(!mima.memory_unit.memory)
     {
@@ -52,6 +53,7 @@ mima_t mima_init()
     }
 
     mima.mima_labels = malloc(labels_capacity * sizeof(mima_label));
+    memset(mima.mima_labels, 0, labels_capacity * sizeof(mima_label));
 
     if (!mima.mima_labels)
     {
@@ -60,6 +62,7 @@ mima_t mima_init()
     }
 
     mima.mima_breakpoints = malloc(breakpoints_capacity * sizeof(mima_breakpoint));
+    memset(mima.mima_breakpoints, 0, breakpoints_capacity * sizeof(mima_breakpoint));
 
     if (!mima.mima_breakpoints)
     {
@@ -68,6 +71,7 @@ mima_t mima_init()
     }
 
     mima.stv_callbacks = malloc(mima.stv_callbacks_capacity * sizeof(mima_io_callback));
+    memset(mima.stv_callbacks, 0, mima.stv_callbacks_capacity * sizeof(mima_io_callback));
 
     if (!mima.stv_callbacks)
     {
@@ -76,6 +80,7 @@ mima_t mima_init()
     }
 
     mima.ldv_callbacks = malloc(mima.ldv_callbacks_capacity * sizeof(mima_io_callback));
+    memset(mima.ldv_callbacks, 0, mima.ldv_callbacks_capacity * sizeof(mima_io_callback));
 
     if (!mima.ldv_callbacks)
     {

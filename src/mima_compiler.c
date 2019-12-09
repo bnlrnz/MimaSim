@@ -23,13 +23,13 @@ mima_bool mima_string_to_number(const char *string, uint32_t *number)
     if (strncmp(string, "0x", 2) == 0)
     {
         // parse hex
-        *number = strtol(string, NULL, 0);
+        *number = strtoul(string, NULL, 0);
         return mima_true;
     }
     else if (string[0] >= '0' && string[0] <= '9')
     {
         // parse decimal integer
-        *number = strtol(string, NULL, 10);
+        *number = strtoul(string, NULL, 10);
         return mima_true;
     }
 
