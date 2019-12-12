@@ -94,6 +94,7 @@ STV   0xFF1
 
 - labels are case sensitive
 - it's not a good idea to jump to a self defined address, unless you know what you are doing
+- labels are not present in mimas memory
 
 ```
 :Loop         // this is a label/jump target
@@ -107,6 +108,7 @@ JMP Loop      // will jump to label :Loop
 
 - breakpoints are set in source code by typing a upper case 'B' on a separate line or interactively in the mima shell
 - when in mima shell, breakpoints can be toggled on/off
+- breakpoints are not present in mimas memory!
 
 ```
 LDV 0xF1
