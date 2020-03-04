@@ -72,7 +72,6 @@ q.............quits mima
 | JMP a    | 0x7    | IAR ← a                              | Continue program execution at address a                                                   |
 | JMN a    | 0x8    | IAR ← (ACC < 0) ? a : ++IAR          | Continue program execution at address a if value in Accumulator is negative               |
 | EQL a    | 0x9    | ACC ← (ACC == mem[a]) ? -1 : 0       | Set Accumulator to -1 if value in Accumulator is equal to value at address a, 0 otherwise |
-| RRN v    | 0xa    | ACC ← (ACC << (32-v)) \| (ACC >>> v)  | Rotate value in Accumulator right by v bits                                               |
 | HLT      | 0xf0   | Halt                                 | Stop program execution                                                                    |
 | NOT      | 0xf1   | ACC ← ~ACC                           | Negate value in Accumulator                                                               |
 | RAR      | 0xf2   | ACC ← (ACC << 31) \| (ACC >>> 1)      | Rotate value in Accumulator right by 1 bit                                                
