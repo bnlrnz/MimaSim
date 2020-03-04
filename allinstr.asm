@@ -12,6 +12,5 @@ EQL 0xFF0
 NOT 
 B
 RAR
-RRN 0
 HLT 
 0xFF0 0
