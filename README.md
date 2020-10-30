@@ -1,6 +1,11 @@
 # MimaSim
 A Mima Simulator written in C with a command line interface and a web frontend based on javascript and webassembly.
-The MiMa (aka Mininal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). It is used at the TU Bergakademie Freiberg.
+The MiMa (aka Minimal Machine) is a academic, simple and minimalistic microprocessor model/didactic tool to teach basic cpu architecture (Von-Neumann architecture). It is used at the TU Bergakademie Freiberg.
+
+<p align="center">
+<img src="https://github.com/bnlrnz/MimaSim/blob/master/web_mima.PNG"/>
+Screenshot of the web Mima.
+</p>
 
 ### Build
 
