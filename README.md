@@ -12,14 +12,6 @@ Screenshot of the web Mima.
 ```bash
 $make
 ```
-or
-
-```bash
-$mkdir build
-$cd build
-$cmake ../
-$make
-```
 
 ### Run
 
