@@ -555,7 +555,7 @@ void mima_instruction_STV(mima_t *mima)
             mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_true);
             mima_wasm_register_transfer(mima, IOMEMORY, SIR, mima->memory_unit.SIR);
             
-            // writing to IO -> ignoring the  first 4 bits
+            // writing to IO
             if (address == mima_char_output)
             {
                 char cha[2];
@@ -571,7 +571,7 @@ void mima_instruction_STV(mima_t *mima)
             if (address == mima_integer_output)
             {
                 char num[32];
-                snprintf(num, 32, "%d\n", value);
+                snprintf(num, 32, "%d\n", (signed)value);
                 mima_wasm_to_output(num);
                 printf("Output: %d\n", value);
                 mima->control_unit.TRA = mima_false;
