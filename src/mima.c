@@ -571,7 +571,7 @@ void mima_instruction_STV(mima_t *mima)
             if (address == mima_integer_output)
             {
                 char num[32];
-                snprintf(num, 32, "(int32_t) %d\n", (int32_t)value);
+                snprintf(num, 32, "%d\n", (int32_t)value);
                 mima_wasm_to_output(num);
                 printf("Output: %s\n", num);
                 mima->control_unit.TRA = mima_false;
