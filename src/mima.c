@@ -539,7 +539,7 @@ void mima_instruction_STV(mima_t *mima)
     case 10:
     {
         mima_register address = mima->control_unit.IR & 0x0FFFFFFF;
-        mima_register value   = mima->memory_unit.SIR & 0x0FFFFFFF;
+        mima_register value   = mima->memory_unit.SIR;
 
         // writing to "internal" memory
         if (address < 0xc000000)
