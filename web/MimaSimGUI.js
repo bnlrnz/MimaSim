@@ -61,7 +61,8 @@ Module.onRuntimeInitialized = async _ =>
     {
         memoryLineMap.clear();
         var value = document.getElementById('source_code').value;
-        var ptr = allocate(intArrayFromString(value), 'i8', ALLOC_NORMAL);
+        var ptr = _malloc(value.length*value.BYTES_PER_ELEMENT);
+        Module.HEAPU8.set(value, ptr);
         var res = _mima_compile_s(mima_instance, ptr);
         if (res)
         {
