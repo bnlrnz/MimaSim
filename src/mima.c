@@ -573,7 +573,7 @@ void mima_instruction_STV(mima_t *mima)
                 char num[32];
                 snprintf(num, 32, "%d\n", (signed)value);
                 mima_wasm_to_output(num);
-                printf("Output: %d\n", value);
+                printf("Output: %s\n", num);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
