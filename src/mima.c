@@ -562,7 +562,7 @@ void mima_instruction_STV(mima_t *mima)
                 cha[0] = (char)value;
                 cha[1] = 0;
                 mima_wasm_to_output(cha);
-                printf("Output: %c - %d\n", value, value);
+                printf("Output (char): %c - %d\n", value, value);
                 mima->control_unit.TRA = mima_false;
                 mima_wasm_register_transfer(mima, TRA, IMMEDIATE, mima_false);
                 break;
@@ -571,7 +571,7 @@ void mima_instruction_STV(mima_t *mima)
             if (address == mima_integer_output)
             {
                 char num[32];
-                snprintf(num, 32, "%d\n", (signed)value);
+                snprintf(num, 32, "(int32_t) %d\n", (int32_t)value);
                 mima_wasm_to_output(num);
                 printf("Output: %s\n", num);
                 mima->control_unit.TRA = mima_false;
