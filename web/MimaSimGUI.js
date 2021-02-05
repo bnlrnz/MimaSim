@@ -62,7 +62,7 @@ Module.onRuntimeInitialized = async _ =>
         memoryLineMap.clear();
         var value = document.getElementById('source_code').value;
         var ptr = Module._malloc(lengthBytesUTF8(value) + 1);
-        Module.stringToUTF8(value, lengthBytesUTF8(value) + 1);
+        stringToUTF8(value, lengthBytesUTF8(value) + 1);
         var res = _mima_compile_s(mima_instance, ptr);
         if (res)
         {
