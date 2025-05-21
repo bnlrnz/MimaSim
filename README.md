@@ -21,7 +21,7 @@ $./MimaSim fibonacci.asm
 
 ### Build for Web
 
-You do not need to build for web by your own. If you just want to play around, go to [bnlrnz.de](https://bnlrnz.de), [https://ifiweb.informatik.tu-freiberg.de/mima/](https://ifiweb.informatik.tu-freiberg.de/mima/) or use the precompiled files under web/.
+You do not need to build for web by your own. If you just want to play around, go to [bnlrnz.de](https://bnlz.de) or use the precompiled files under web/.
 
 You need emscripten (https://emscripten.org/docs/getting_started/downloads.html) to build for web/webasm.
 
