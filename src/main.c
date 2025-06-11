@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "mima.h"
 #include "log.h"
 
@@ -8,8 +9,11 @@ void get_number(mima_t *mima, mima_register *value)
     printf("Type integer:");
     char number_string[32] = {0};
     char *endptr;
-    fgets(number_string, 31, stdin);
-    *value = strtol(number_string, &endptr, 0);
+    while(fgets(number_string, 31, stdin)){
+    	*value = strtol(number_string, &endptr, 0);
+	if (number_string != endptr && (*value != ERANGE || *value != EINVAL)) break;
+    	printf("Wrong input!\nType integer:");
+    }
     mima->control_unit.TRA = mima_false;
 }
 

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <errno.h>
 
 #include "log.h"
 #include "mima.h"
@@ -463,8 +464,11 @@ void mima_instruction_LDV(mima_t *mima)
                     printf("Waiting for number (dec or hex [with 0x-prefix]):");
                     char number_string[32] = {0};
                     char *endptr;
-                    fgets(number_string, 31, stdin);
-                    number = strtol(number_string, &endptr, 0);
+    		    while(fgets(number_string, 31, stdin)){
+    	            	number  = strtol(number_string, &endptr, 0);
+	            	if (number_string != endptr && (number != ERANGE || number != EINVAL)) break;
+    		    	printf("Wrong input!\nType integer:");
+                    }
                 #endif
                 
                 mima->memory_unit.SIR = number;
